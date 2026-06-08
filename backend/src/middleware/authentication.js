@@ -9,7 +9,6 @@ if (!JWT_SECRET) {
 
 export const authenticateUser = (req, res, next) => {
   const authHeader = req.headers.authorization;
-
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new UnauthenticatedError('Authentication invalid');
   }
