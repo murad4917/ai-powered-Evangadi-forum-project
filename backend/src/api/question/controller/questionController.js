@@ -4,6 +4,7 @@ import {
   getQuestionsService,
   getSingleQuestionService,
   searchQuestionsSemanticService,
+  getSimilarQuestionsService,
 } from '../service/question.service.js';
 import { assessAnswerAgainstQuestionService } from '../service/geminTextCoach.service.js';
 
@@ -100,6 +101,29 @@ export const searchQuestionsSemanticController = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Semantic search completed successfully.",
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSimilarQuestionsController = async (req, res, next) => {
+  try {
+    const { questionHash } = req.params;
+    const k = req.query.k ? Number(req.query.k) : undefined;
+    const threshold =
+      req.query.threshold !== undefined
+        ? Number(req.query.threshold)
+        : undefined;
+    const result = await getSimilarQuestionsService({
+      questionHash,
+      k,
+      threshold,
+    });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Similar questions fetched successfully.",
       ...result,
     });
   } catch (error) {

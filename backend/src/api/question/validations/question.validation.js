@@ -66,3 +66,14 @@ export const searchQuestionsSemanticValidation = [
 
   validationErrorHandler,
 ];
+
+export const getSimilarQuestionsValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("questionHash is required")
+    .matches(/^[a-f0-9]{16}$/)
+    .withMessage("questionHash must be a 16-character lowercase hex string"),
+  query("k").optional().isInt({ min: 1, max: 20 }).toInt(),
+  query("threshold").optional().isFloat({ min: 0, max: 1 }).toFloat(),
+  validationErrorHandler,
+];
