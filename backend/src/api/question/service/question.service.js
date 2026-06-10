@@ -6,6 +6,8 @@ import {
     normalizeQuestionText,
     storeQuestionVector,
     generateQuestionEmbedding,
+    getVectorConfig,
+    findSimilarQuestionsByText,
 } from './vector.service.js';
 
 const generateQuestionHash = () =>
@@ -297,7 +299,7 @@ export const getQuestionsService = async (filters) => {
  */
 export const getSingleQuestionService = async (questionHash) => {
     const sql = `
-        SELECT 
+        SELECT  
             q.question_id AS id,
             q.question_hash AS questionHash,
             q.title,
@@ -344,4 +346,54 @@ export const getSingleQuestionService = async (questionHash) => {
             lastName: row.lastName,
         },
     };
+};
+
+
+export const searchQuestionsSemanticController = async (req, res, next) => {
+  try {
+    const result = await searchQuestionsSemanticService({
+      query: req.query.query,
+      k: req.query.k ? Number(req.query.k) : 5,
+      threshold:
+        req.query.threshold !== undefined
+          ? Number(req.query.threshold)
+          : undefined,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Semantic search completed successfully.",
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const searchQuestionsSemanticService = async ({
+  query,
+  k = 5,
+  threshold,
+}) => {
+  const sourceText = normalizeQuestionText({ title: query });
+  const vectorConfig = getVectorConfig();
+
+  const searchThreshold =
+    threshold !== undefined ? threshold : vectorConfig.recommendThreshold;
+
+  const result = await findSimilarQuestionsByText({
+    sourceText,
+    threshold: searchThreshold,
+    k,
+  });
+
+  return {
+    data: result.similarQuestions,
+    meta: {
+      query,
+      k,
+      threshold: searchThreshold,
+      total: result.similarQuestions.length,
+    },
+  };
 };

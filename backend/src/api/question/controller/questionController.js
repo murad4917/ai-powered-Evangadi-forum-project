@@ -3,7 +3,7 @@ import {
   createQuestionService,
   getQuestionsService,
   getSingleQuestionService,
-  searchQuestionSemanticService,
+  searchQuestionsSemanticService,
 } from '../service/question.service.js';
 import { assessAnswerAgainstQuestionService } from '../service/geminTextCoach.service.js';
 
@@ -84,4 +84,25 @@ export const getQuestionsController = async (req, res, next) => {
 
 next(error); // Pass the error to the error handling middleware
     }
+};
+
+export const searchQuestionsSemanticController = async (req, res, next) => {
+  try {
+    const result = await searchQuestionsSemanticService({
+      query: req.query.query,
+      k: req.query.k ? Number(req.query.k) : 5,
+      threshold:
+        req.query.threshold !== undefined
+          ? Number(req.query.threshold)
+          : undefined,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Semantic search completed successfully.",
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
