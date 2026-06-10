@@ -33,28 +33,6 @@ export const createQuestionController = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};/**
- * Handles fetching a single question with answers. Max 100 answers.
- * * @param {import('express').Request} req - The Express request object.
- * @param {import('express').Response} res - The Express response object.
- * @param {import('express').NextFunction} next - The Express next function.
- * @returns {Promise<void>}
- */
-export const getSingleQuestionController = async (req, res, next) => {
-  try {
-    const { questionHash } = req.params;
-    
-    const result = await getSingleQuestionService({
-      questionHash,
-    });
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "Question fetched successfully.",
-      ...result,
-    });
-  } catch (error) {
-    next(error);
-  }
 };
 
 

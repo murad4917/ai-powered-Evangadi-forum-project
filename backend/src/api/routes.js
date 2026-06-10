@@ -5,4 +5,3 @@ export const mainRouter = express.Router();
 
 // Authentication routes
 mainRouter.use('/auth', authRoutes);
-
