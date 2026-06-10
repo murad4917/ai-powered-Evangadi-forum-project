@@ -18,6 +18,28 @@ export const createQuestionValidation = [
 
     validationErrorHandler,
 ];
+export const getQuestionsValidation = [
+  query("search")
+    .optional()
+    .isString()
+    .withMessage("Search query must be a string")
+    .trim(),
+  query("mine")
+    .optional()
+    .isBoolean()
+    .withMessage("Mine query parameter must be a boolean")
+    .toBoolean(),
+  validationErrorHandler,
+];
+
+export const getSingleQuestionValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("Question hash must be a string")
+    .matches(/^[a-f0-9]{32}$/)
+    .withMessage("Question hash must be a 32-character lowercase hex string")
+    .trim(),
+  validationErrorHandler,
 
 export const getQuestionsValidation = [
     query("search")
