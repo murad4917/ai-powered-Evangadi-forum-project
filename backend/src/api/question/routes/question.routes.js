@@ -1,26 +1,39 @@
-import express from 'express';
+import express from "express";
 import {
   createQuestionController,
-} from '../controller/questionController.js';
+  generateQuestionDraftCoachController,
+} from "../controller/questionController.js";
 import {
   createQuestionValidation,
-} from '../validations/question.validation.js';
-import { authenticateUser } from '../../../middleware/authentication.js';
+  generateQuestionDraftCoachValidation,
+} from "../validations/question.validation.js";
+import { authenticateUser } from "../../../middleware/authentication.js";
 
 const router = express.Router();
 
 /**
- * @route POST /api/questions
+ * @route POST /api/question
  * @desc Create a new question
  * @access Protected
+ * @history Checked against production standard
  */
 router.post(
-  '/',
-  authenticateUser,  
+  "/",
+  authenticateUser,
   createQuestionValidation,
   createQuestionController,
 );
 
-
+/**
+ * @route POST /api/question/draft-coach
+ * @desc Generate AI improvement tips for a draft question [Task T-17]
+ * @access Protected
+ */
+router.post(
+  "/draft-coach",
+  authenticateUser,
+  generateQuestionDraftCoachValidation,
+  generateQuestionDraftCoachController,
+);
 
 export default router;

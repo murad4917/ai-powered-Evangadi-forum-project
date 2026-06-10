@@ -1,37 +1,50 @@
-import { StatusCodes } from 'http-status-codes';
-import {
-  createQuestionService,
-  getQuestionsService,
-  getSingleQuestionService,
-  searchQuestionSemanticService,
-} from '../service/question.service.js';
-import { assessAnswerAgainstQuestionService } from '../service/geminTextCoach.service.js';
+import { StatusCodes } from "http-status-codes";
 
+// Only import createQuestionService since it's the only one used here right now
+import { createQuestionService } from "../service/question.service.js";
+
+// Import your draft coach service function
+import { generateQuestionDraftCoachService } from "../service/geminiTextCoach.service.js";
 
 /**
  * Handles creating a new question
- * 
- * @param {import('express').Request} req - The request object
- * @param {import('express').Response} res - The response object
- * @returns {Promise<void>} - A promise that resolves when the question is created  
- * @returns {Promise<void>}
  */
 export const createQuestionController = async (req, res, next) => {
-    try {
-        // Extract title and content from the request body
-        const { title, content } = req.body;
-        const data = await createQuestionService({
-             userId: req.user.id //autor id (authenticated user)
-            , title
-            , content
-        });
-        res.status(StatusCodes.CREATED).json({
-            success: true,
-            message: 'Question posted successfully.',
-            data,
-        });
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const { title, content } = req.body;
+    const data = await createQuestionService({
+      userId: req.user.id,
+      title,
+      content,
+    });
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      message: "Question posted successfully.",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
+/**
+ * @desc Generate AI improvement tips for a draft question [Task T-17]
+ * @route POST /api/question/draft-coach
+ * @access Protected
+ */
+export const generateQuestionDraftCoachController = async (req, res, next) => {
+  try {
+    const { title, content } = req.body;
+
+    // Call your Gemini service function with the object it expects
+    const result = await generateQuestionDraftCoachService({ title, content });
+
+    // Return the tips back to Postman
+    res.status(StatusCodes.OK).json({
+      success: true,
+      tips: result.tips,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
