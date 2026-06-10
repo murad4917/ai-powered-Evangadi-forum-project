@@ -1,9 +1,13 @@
 import express from 'express';
 import {
   createQuestionController,
+  getQuestionsController,
+  getQuestionsValidation,
+  searchQuestionsSemanticController,
 } from '../controller/questionController.js';
 import {
   createQuestionValidation,
+  searchQuestionsSemanticValidation,
 } from '../validations/question.validation.js';
 import { authenticateUser } from '../../../middleware/authentication.js';
 
@@ -32,5 +36,15 @@ router.get('/',
   getQuestionsValidation, 
   getQuestionsController);
 
-
+/**
+ * @route GET /api/questions/search
+ * @desc Semantic search for questions using vector embeddings based on a text query
+ * @access Private
+ */
+router.get(
+  "/search",
+  authenticateUser,
+  searchQuestionsSemanticValidation,
+  searchQuestionsSemanticController,
+);
 export default router;
