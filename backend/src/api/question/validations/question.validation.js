@@ -18,3 +18,16 @@ export const createQuestionValidation = [
 
     validationErrorHandler,
 ];
+
+export const getQuestionsValidation = [
+    query("search")
+        .optional()
+        .isString()
+        .withMessage("Search query must be a string")
+        .trim(),
+    query("mine")
+        .optional()
+        .isBoolean()
+        .withMessage("Mine query must be a boolean"),
+    validationErrorHandler,
+];
