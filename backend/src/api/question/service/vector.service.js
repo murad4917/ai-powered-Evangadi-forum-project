@@ -126,7 +126,7 @@ export async function storeQuestionVector({
 // generate embedding using NEW SDK
 export async function generateQuestionEmbedding(sourceText, options = {}) {
   // keep requested line for compatibility
-  const { tasktype = 'RETRIVE_DOCUMENT' } = options;
+  const { taskType = 'RETRIEVAL_DOCUMENT' } = options;
 
   if (!sourceText || typeof sourceText !== 'string') {
     throw new Error('Source text must be a non-empty string');
@@ -135,6 +135,9 @@ export async function generateQuestionEmbedding(sourceText, options = {}) {
   const result = await ai.models.embedContent({
     model: GEMINI_EMBEDDING_MODEL,
     contents: sourceText,
+    config: { 
+            taskType: taskType,
+            outputDimensionality: 768 },
   });
 
   let embedding =
@@ -157,7 +160,7 @@ export async function generateQuestionEmbedding(sourceText, options = {}) {
   return { embedding };
 }
 
-export async function findSimilarQuestionsByText({ sourceText, threshold, k }) {
+export async function findSimilarQuestionsByText({ sourceText, threshold, k, excludeQuestionId, queryEmbedding,}) {
   // Normalize parameters
   const normalizedK = k || RECOMMEND_K;
   const normalizedThreshold = threshold || RECOMMEND_THRESHOLD;
@@ -184,7 +187,7 @@ export async function findSimilarQuestionsByText({ sourceText, threshold, k }) {
   // Retrieve all ready embeddings from MySQL
   let storedEmbeddings;
   try {
-    storedEmbeddings = await retrieveReadyEmbeddings(); // give all embeding from the database that are ready to use
+    storedEmbeddings = await retrieveReadyEmbeddings(); // give all embedding from the database that are ready to use
   } catch (error) {
     console.error("Error:", error);
     throw error;
@@ -194,6 +197,13 @@ export async function findSimilarQuestionsByText({ sourceText, threshold, k }) {
   const similarities = [];
 
   for (const stored of storedEmbeddings) {
+     // Skip the source question so the endpoint never recommends the same question back to itself.
+    if (
+      excludeQuestionId !== undefined &&
+      String(stored.questionId) === String(excludeQuestionId)
+    ) {
+      continue;
+    }
     try {
       const score = calculateCosineSimilarity(queryEmbedding, stored.embedding);
 

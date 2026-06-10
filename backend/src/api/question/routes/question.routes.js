@@ -4,10 +4,12 @@ import {
   getQuestionsController,
   getQuestionsValidation,
   searchQuestionsSemanticController,
+  getSimilarQuestionsController,
 } from '../controller/questionController.js';
 import {
   createQuestionValidation,
   searchQuestionsSemanticValidation,
+  getSimilarQuestionsValidation,
 } from '../validations/question.validation.js';
 import { authenticateUser } from '../../../middleware/authentication.js';
 
@@ -46,5 +48,17 @@ router.get(
   authenticateUser,
   searchQuestionsSemanticValidation,
   searchQuestionsSemanticController,
+);
+
+/**
+ * @route GET /api/questions/:questionHash/similar
+ * @desc Get similar questions based on vector embeddings
+ * @access Private (Requires Bearer Token)
+ */
+router.get(
+  "/:questionHash/similar",
+  authenticateUser,
+  getSimilarQuestionsValidation,
+  getSimilarQuestionsController,
 );
 export default router;

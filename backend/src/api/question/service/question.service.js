@@ -397,3 +397,38 @@ export const searchQuestionsSemanticService = async ({
     },
   };
 };
+
+export const getSimilarQuestionsService = async ({
+  questionHash,
+  k = 5,
+  threshold,
+}) => {
+  // Find the source question by hash
+  const sql = `SELECT question_id AS id, title FROM questions WHERE question_hash = ?`;
+  const rows = await safeExecute(sql, [questionHash]);
+  if (!rows || rows.length === 0) {
+    throw new NotFoundError("Question not found");
+  }
+
+  const question = rows[0];
+  const sourceText = normalizeQuestionText({ title: question.title });
+
+  const result = await findSimilarQuestionsByText({
+    sourceText,
+    k,
+    threshold,
+    // Exclude the source question itself so it never appears in its own recommendations.
+    excludeQuestionId: question.id,
+    queryEmbedding: sourceEmbedding, // optional param
+  });
+
+  return {
+    data: result.similarQuestions,
+    meta: {
+      questionHash,
+      k,
+      threshold,
+      total: result.similarQuestions.length,
+    },
+  };
+};
