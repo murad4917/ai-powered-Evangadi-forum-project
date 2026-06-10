@@ -28,7 +28,7 @@ Return ONLY 3–5 short bullet-point tips.
 
     // Clean, standard model string
     const model = genai.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
     });
 
     const result = await model.generateContent(prompt);
