@@ -35,3 +35,31 @@ export const createQuestionController = async (req, res, next) => {
     }
 };
 
+
+
+/**
+ * Handle listing questions with optional search and filtering max 100 records
+ * @param {import('express').Request} req - The request object
+ * @param {import('express').Response} res - The response object
+ * @parms{import('express').NextFunction} next - The next middleware function
+ * @returns {Promise<void>} - A promise that resolves when the questions are retrieved
+ */ 
+ 
+export const getQuestionsController = async (req, res, next) => {
+    try {
+        const filters = {
+            search: req.query.search,
+            mine: req.query.mine === 'true' || req.query.mine === true,
+            userId: req.user.id // pass autonhenticated user id for filtering if mine=true
+        };
+        const result = await getQuestionsService(filters);
+        res.status(StatusCodes.OK).json({
+            success: true,
+            message: "Questions retrieved successfully",
+            ...result,
+        });
+    } catch (error) {
+
+next(error); // Pass the error to the error handling middleware
+    }
+};
