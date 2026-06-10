@@ -104,6 +104,47 @@ export const getSingleQuestionService = async ({
             q.question_hash AS questionHash,
             q.title,
             q.content,
+
+const buildQuestionFilters = (filters = {}) => {
+    const condition = [];
+    const params = [];
+
+    if (filters.search) {
+        condition.push('(q.title LIKE ? OR q.content LIKE ?)');
+        params.push(`%${filters.search}%`, `%${filters.search}%`);
+    }
+
+    if (filters.mine) {
+        condition.push('q.user_id = ?');
+        params.push(filters.userId);
+    }
+
+    if (condition.length === 0) {
+        return { whereClause: '', params: [] };
+    }
+
+    return {
+        whereClause: 'WHERE ' + condition.join(' AND '),
+        params,
+    };
+};          
+
+/**
+ * Get all questions with optional filtering
+ * @param {object} filters - filter options
+ * @returns {Promise<object>}
+ */
+export const getQuestionsService = async (filters) => {
+    const normalizedLimit = 100; // enforce a maximum limit of 100 records
+    const sortColumn = 'q.created_at';
+    const sortOrder = 'DESC';
+    const { whereClause, params } = buildQuestionFilters(filters);
+    const listSql = `
+        SELECT 
+            q.question_id AS id,
+            q.question_hash AS questionHash,
+            q.title,
+            q.content, 
             q.created_at AS createdAt,
             q.updated_at AS updatedAt,
             u.user_id AS userId,
@@ -204,4 +245,103 @@ export const getSingleQuestionService = async ({
       total: answers.length,
     },
   };
+};
+            FROM questions q
+            JOIN users u ON q.user_id = u.user_id
+            LEFT JOIN answers a ON q.question_id = a.question_id
+            ${whereClause}
+            GROUP BY
+                q.question_id,
+                q.question_hash,
+                q.title,
+                q.content,
+                q.created_at,
+                q.updated_at,
+                u.user_id,
+                u.first_name,
+                u.last_name
+            ORDER BY ${sortColumn} ${sortOrder}
+            LIMIT ${normalizedLimit}
+    `;
+    const rows = await safeExecute(listSql, params);
+
+    return {
+        data: rows.map(row => ({
+            id: row.id,
+            questionHash: row.questionHash,
+            title: row.title,
+            content: row.content,
+            answerCount: row.answerCount,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            author: {
+                id: row.userId,
+                firstName: row.firstName,
+                lastName: row.lastName,
+            },
+        })),
+        meta: {
+            limit: normalizedLimit,
+            total: rows.length,
+            sortBy: 'newest',
+            sortOrder: sortOrder.toLowerCase(),
+        },
+    };
+};
+
+/**
+ * Get a single question by questionHash
+ * @param {string} questionHash - The question hash identifier
+ * @returns {Promise<object>} - The question object with author details
+ * @throws {BadRequestError} - If question is not found
+ */
+export const getSingleQuestionService = async (questionHash) => {
+    const sql = `
+        SELECT 
+            q.question_id AS id,
+            q.question_hash AS questionHash,
+            q.title,
+            q.content,
+            q.created_at AS createdAt,
+            q.updated_at AS updatedAt,
+            u.user_id AS userId,
+            u.first_name AS firstName,
+            u.last_name AS lastName,
+            COUNT(DISTINCT a.answer_id) AS answerCount
+        FROM questions q
+        JOIN users u ON q.user_id = u.user_id
+        LEFT JOIN answers a ON q.question_id = a.question_id
+        WHERE q.question_hash = ?
+        GROUP BY 
+            q.question_id,
+            q.question_hash,
+            q.title,
+            q.content,
+            q.created_at,
+            q.updated_at,
+            u.user_id,
+            u.first_name,
+            u.last_name
+    `;
+    const rows = await safeExecute(sql, [questionHash]);
+    
+    if (rows.length === 0) {
+        throw new BadRequestError('Question not found');
+    }
+    
+    const row = rows[0];
+    return {
+        id: row.id,
+        questionHash: row.questionHash,
+        title: row.title,
+        content: row.content,
+        answerCount: row.answerCount,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        author: {
+            id: row.userId,
+            firstName: row.firstName,
+            lastName: row.lastName,
+        },
+    };
 };

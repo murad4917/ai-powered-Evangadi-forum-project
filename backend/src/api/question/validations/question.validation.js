@@ -40,4 +40,16 @@ export const getSingleQuestionValidation = [
     .withMessage("Question hash must be a 32-character lowercase hex string")
     .trim(),
   validationErrorHandler,
+
+export const getQuestionsValidation = [
+    query("search")
+        .optional()
+        .isString()
+        .withMessage("Search query must be a string")
+        .trim(),
+    query("mine")
+        .optional()
+        .isBoolean()
+        .withMessage("Mine query must be a boolean"),
+    validationErrorHandler,
 ];

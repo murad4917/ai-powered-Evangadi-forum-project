@@ -22,5 +22,15 @@ router.post(
 );
 
 
+/**
+ * @route GET /api/questions
+ * @desc List questions with optional search and filtering
+ * @access Protected
+ */
+router.get('/', 
+  authenticateUser,
+  getQuestionsValidation, 
+  getQuestionsController);
+
 
 export default router;
