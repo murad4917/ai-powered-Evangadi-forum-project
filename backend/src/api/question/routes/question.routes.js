@@ -2,6 +2,7 @@ import express from "express";
 import {
   createQuestionController,
   generateQuestionDraftCoachController,
+  assessAnswerAgainstQuestionController,
   getQuestionsController,
   searchQuestionsSemanticController,
   getSimilarQuestionsController,
@@ -9,6 +10,7 @@ import {
 import {
   createQuestionValidation,
   generateQuestionDraftCoachValidation,
+  assessAnswerAgainstQuestionValidation,
   getQuestionsValidation,
   searchQuestionsSemanticValidation,
   getSimilarQuestionsValidation,
@@ -30,6 +32,13 @@ router.post(
   generateQuestionDraftCoachValidation,
   generateQuestionDraftCoachController,
 );
+router.post(
+  "/:questionHash/answer-fit",
+  authenticateUser,
+  assessAnswerAgainstQuestionValidation,
+  assessAnswerAgainstQuestionController,
+);
+
 
 router.get(
   "/",

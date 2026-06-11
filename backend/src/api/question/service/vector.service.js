@@ -1,13 +1,10 @@
-import { GoogleGenAI } from '@google/genai';
-import { safeExecute } from '../../../../db/config.js';
+import { GoogleGenAI } from "@google/genai";
+import { safeExecute } from "../../../../db/config.js";
 
-import {
-  BadRequestError,
-  NotFoundError,
-} from '../../../utils/errors/index.js';
+import { BadRequestError, NotFoundError } from "../../../utils/errors/index.js";
 
 const GEMINI_EMBEDDING_MODEL =
-  process.env.GEMINI_EMBEDDING_MODEL || 'text-embedding-004';
+  process.env.GEMINI_EMBEDDING_MODEL || "text-embedding-004";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -17,7 +14,7 @@ const RECOMMENDED_THRESHOLD =
 const RECOMMENDED_K = Number(process.env.RECOMMENDED_K) || 5;
 
 if (!GEMINI_API_KEY) {
-  throw new Error('GEMINI_API_KEY is not set');
+  throw new Error("GEMINI_API_KEY is not set");
 }
 
 // NEW SDK INITIALIZATION (using @google/genai)
@@ -25,24 +22,27 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 function extractEmbeddingValues(embeddingCandidate) {
   if (Array.isArray(embeddingCandidate)) return embeddingCandidate;
-  if (Array.isArray(embeddingCandidate?.values)) return embeddingCandidate.values;
-  if (Array.isArray(embeddingCandidate?.embedding)) return embeddingCandidate.embedding;
-  if (Array.isArray(embeddingCandidate?.embedding?.values)) return embeddingCandidate.embedding.values;
+  if (Array.isArray(embeddingCandidate?.values))
+    return embeddingCandidate.values;
+  if (Array.isArray(embeddingCandidate?.embedding))
+    return embeddingCandidate.embedding;
+  if (Array.isArray(embeddingCandidate?.embedding?.values))
+    return embeddingCandidate.embedding.values;
 
-  if (ArrayBuffer.isView(embeddingCandidate?.values)) return Array.from(embeddingCandidate.values);
-  if (ArrayBuffer.isView(embeddingCandidate)) return Array.from(embeddingCandidate);
+  if (ArrayBuffer.isView(embeddingCandidate?.values))
+    return Array.from(embeddingCandidate.values);
+  if (ArrayBuffer.isView(embeddingCandidate))
+    return Array.from(embeddingCandidate);
 
   return [];
 }
 
 function normalizeWhitespace(value) {
-  return value.replace(/\s+/g, ' ').trim();
+  return value.replace(/\s+/g, " ").trim();
 }
 
 export function normalizeQuestionText({ title }) {
-  return normalizeWhitespace((title || '')
-    .normalize('NFKC')
-    .toLowerCase());
+  return normalizeWhitespace((title || "").normalize("NFKC").toLowerCase());
 }
 /**
  * Get the current vector search configuration values from environment variables or defaults.
@@ -56,21 +56,22 @@ export function getVectorConfig() {
 }
 
 function validateEmbedding(embedding) {
-  if (!Array.isArray(embedding)) throw new Error('Embedding must be an array');
-  if (embedding.length === 0) throw new Error('Embedding array cannot be empty');
+  if (!Array.isArray(embedding)) throw new Error("Embedding must be an array");
+  if (embedding.length === 0)
+    throw new Error("Embedding array cannot be empty");
 
-  if (!embedding.every(v => typeof v === 'number' && !Number.isNaN(v))) {
-    throw new Error('Embedding array must contain only valid numbers');
+  if (!embedding.every((v) => typeof v === "number" && !Number.isNaN(v))) {
+    throw new Error("Embedding array must contain only valid numbers");
   }
 }
 
 export async function storeQuestionVector({
   questionId,
-  sourceText = '',
+  sourceText = "",
   embedding,
   status,
 }) {
-  if (status === 'failed' || (embedding && embedding.length === 0)) {
+  if (status === "failed" || (embedding && embedding.length === 0)) {
     const sql = `
       INSERT INTO question_vectors (
         question_id,
@@ -115,29 +116,25 @@ export async function storeQuestionVector({
       updated_at = CURRENT_TIMESTAMP
   `;
 
-  await safeExecute(sql, [
-    questionId,
-    sourceText,
-    embeddingJson,
-    status,
-  ]);
+  await safeExecute(sql, [questionId, sourceText, embeddingJson, status]);
 }
 
 // generate embedding using NEW SDK
 export async function generateQuestionEmbedding(sourceText, options = {}) {
   // keep requested line for compatibility
-  const { taskType = 'RETRIEVAL_DOCUMENT' } = options;
+  const { taskType = "RETRIEVAL_DOCUMENT" } = options;
 
-  if (!sourceText || typeof sourceText !== 'string') {
-    throw new Error('Source text must be a non-empty string');
+  if (!sourceText || typeof sourceText !== "string") {
+    throw new Error("Source text must be a non-empty string");
   }
 
   const result = await ai.models.embedContent({
     model: GEMINI_EMBEDDING_MODEL,
     contents: sourceText,
-    config: { 
-            taskType: taskType,
-            outputDimensionality: 768 },
+    config: {
+      taskType: taskType,
+      outputDimensionality: 768,
+    },
   });
 
   let embedding =
@@ -149,40 +146,52 @@ export async function generateQuestionEmbedding(sourceText, options = {}) {
   embedding = extractEmbeddingValues(embedding);
 
   if (!Array.isArray(embedding) || embedding.length === 0) {
-    throw new Error('Gemini API did not return a valid embedding vector');
+    throw new Error("Gemini API did not return a valid embedding vector");
   }
 
-  const allNumbers = embedding.every(v => typeof v === 'number' && !Number.isNaN(v));
+  const allNumbers = embedding.every(
+    (v) => typeof v === "number" && !Number.isNaN(v),
+  );
   if (!allNumbers) {
-    throw new Error('Embedding contains invalid numeric values');
+    throw new Error("Embedding contains invalid numeric values");
   }
 
   return { embedding };
 }
 
-export async function findSimilarQuestionsByText({ sourceText, threshold, k, excludeQuestionId, queryEmbedding,}) {
+export async function findSimilarQuestionsByText({
+  sourceText,
+  threshold,
+  k,
+  excludeQuestionId,
+  queryEmbedding,
+}) {
   // Normalize parameters
   const normalizedK = k || RECOMMEND_K;
   const normalizedThreshold = threshold || RECOMMEND_THRESHOLD;
 
   // Use RETRIEVAL_QUERY task type when searching against stored documents
   let embeddingResult;
-  try {
-    embeddingResult = await generateQuestionEmbedding(sourceText, {
-      taskType: "RETRIEVAL_QUERY",
-    });
-  } catch (error) {
-    console.error("=== GEMINI API ERROR DURING SEARCH ===");
-    console.error("Operation: findSimilarQuestionsByText");
-    console.error("Search text:", sourceText);
-    console.error("Error:", error);
-    console.error("======================================");
-    throw new ServiceUnavailableError(
-      "Failed to generate embedding for search query. Please try again later.",
-    );
+  if (queryEmbedding) {
+    embeddingResult = { embedding: queryEmbedding };
+  } else {
+    try {
+      embeddingResult = await generateQuestionEmbedding(sourceText, {
+        taskType: "RETRIEVAL_QUERY",
+      });
+    } catch (error) {
+      console.error("=== GEMINI API ERROR DURING SEARCH ===");
+      console.error("Operation: findSimilarQuestionsByText");
+      console.error("Search text:", sourceText);
+      console.error("Error:", error);
+      console.error("======================================");
+      throw new ServiceUnavailableError(
+        "Failed to generate embedding for search query. Please try again later.",
+      );
+    }
   }
 
-  const queryEmbedding = embeddingResult.embedding; //[0.434, 0.234, 0.123, ...]
+  const queryEmbeddingVector = embeddingResult.embedding; //[0.434, 0.234, 0.123, ...]
 
   // Retrieve all ready embeddings from MySQL
   let storedEmbeddings;
@@ -197,7 +206,7 @@ export async function findSimilarQuestionsByText({ sourceText, threshold, k, exc
   const similarities = [];
 
   for (const stored of storedEmbeddings) {
-     // Skip the source question so the endpoint never recommends the same question back to itself.
+    // Skip the source question so the endpoint never recommends the same question back to itself.
     if (
       excludeQuestionId !== undefined &&
       String(stored.questionId) === String(excludeQuestionId)
@@ -205,7 +214,10 @@ export async function findSimilarQuestionsByText({ sourceText, threshold, k, exc
       continue;
     }
     try {
-      const score = calculateCosineSimilarity(queryEmbedding, stored.embedding);
+      const score = calculateCosineSimilarity(
+        queryEmbeddingVector,
+        stored.embedding,
+      );
 
       // Filter by threshold
       if (score >= normalizedThreshold) {
