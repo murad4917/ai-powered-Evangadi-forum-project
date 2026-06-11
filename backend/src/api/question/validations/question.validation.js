@@ -30,5 +30,64 @@ export const generateQuestionDraftCoachValidation = [
     .isLength({ max: 5000 })
     .withMessage("Content cannot exceed 5000 characters"),
 
+    validationErrorHandler,
+];
+export const getQuestionsValidation = [
+  query("search")
+    .optional()
+    .isString()
+    .withMessage("Search query must be a string")
+    .trim(),
+  query("mine")
+    .optional()
+    .isBoolean()
+    .withMessage("Mine query parameter must be a boolean")
+    .toBoolean(),
+  validationErrorHandler,
+];
+
+export const getSingleQuestionValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("Question hash must be a string")
+    .matches(/^[a-f0-9]{32}$/)
+    .withMessage("Question hash must be a 32-character lowercase hex string")
+    .trim(),
+  validationErrorHandler,
+];
+
+export const searchQuestionsSemanticValidation = [
+  query("query")
+    .notEmpty()
+    .withMessage("query is required")
+    .isString()
+    .withMessage("query must be a string")
+    .isLength({ min: 5 })
+    .withMessage("query must be at least 5 characters")
+    .trim(),
+
+  query("k")
+    .optional()
+    .isInt({ min: 1, max: 20 })
+    .withMessage("k must be between 1 and 20")
+    .toInt(),
+
+  query("threshold")
+    .optional()
+    .isFloat({ min: 0, max: 1 })
+    .withMessage("threshold must be between 0 and 1")
+    .toFloat(),
+
+  validationErrorHandler,
+];
+
+export const getSimilarQuestionsValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("questionHash is required")
+    .matches(/^[a-f0-9]{16}$/)
+    .withMessage("questionHash must be a 16-character lowercase hex string"),
+  query("k").optional().isInt({ min: 1, max: 20 }).toInt(),
+  query("threshold").optional().isFloat({ min: 0, max: 1 }).toFloat(),
   validationErrorHandler,
 ];
