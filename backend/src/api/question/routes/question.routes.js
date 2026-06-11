@@ -17,12 +17,6 @@ import { authenticateUser } from "../../../middleware/authentication.js";
 
 const router = express.Router();
 
-/**
- * @route POST /api/question
- * @desc Create a new question
- * @access Protected
- * @history Checked against production standard
- */
 router.post(
   "/",
   authenticateUser,
@@ -30,11 +24,6 @@ router.post(
   createQuestionController,
 );
 
-/**
- * @route POST /api/question/draft-coach
- * @desc Generate AI improvement tips for a draft question [Task T-17]
- * @access Protected
- */
 router.post(
   "/draft-coach",
   authenticateUser,
@@ -42,11 +31,6 @@ router.post(
   generateQuestionDraftCoachController,
 );
 
-/**
- * @route GET /api/questions
- * @desc List questions with optional search and filtering
- * * @access Protected
- */
 router.get(
   "/",
   authenticateUser,
@@ -54,11 +38,6 @@ router.get(
   getQuestionsController,
 );
 
-/**
- * @route GET /api/questions/search
- * @desc Semantic search for questions using vector embeddings based on a text query
- * @access Private
- */
 router.get(
   "/search",
   authenticateUser,
@@ -66,11 +45,6 @@ router.get(
   searchQuestionsSemanticController,
 );
 
-/**
- * @route GET /api/questions/:questionHash/similar
- * @desc Get similar questions based on vector embeddings
- * @access Private (Requires Bearer Token)
- */
 router.get(
   "/:questionHash/similar",
   authenticateUser,
