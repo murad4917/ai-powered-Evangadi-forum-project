@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param, query } from "express-validator";
 import { validationErrorHandler } from "../../../middleware/validation-handler.js";
 
 export const createQuestionValidation = [
@@ -16,10 +16,6 @@ export const createQuestionValidation = [
     .isLength({ max: 5000 })
     .withMessage("Body cannot exceed 5000 characters"),
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> cde9218fe5baf356dc14877cd28b85ac2bb97e58
   validationErrorHandler,
 ];
 export const generateQuestionDraftCoachValidation = [
@@ -34,14 +30,29 @@ export const generateQuestionDraftCoachValidation = [
     .isLength({ max: 5000 })
     .withMessage("Content cannot exceed 5000 characters"),
 
-<<<<<<< HEAD
   validationErrorHandler,
 ];
-=======
-=======
->>>>>>> cde9218fe5baf356dc14877cd28b85ac2bb97e58
-    validationErrorHandler,
+export const assessAnswerAgainstQuestionValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("Question hash is required")
+    .matches(/^[a-f0-9]{16}$/)
+    .withMessage("Question hash must be a 16-character lowercase hex string"),
+
+  body("answerText")
+    .notEmpty()
+    .withMessage("Answer text is required")
+    .isString()
+    .withMessage("Answer text must be a string")
+    .isLength({ min: 20 })
+    .withMessage(
+      "Answer text must be at least 20 characters for a meaningful fit check",
+    )
+    .trim(),
+
+  validationErrorHandler,
 ];
+
 export const getQuestionsValidation = [
   query("search")
     .optional()
@@ -101,7 +112,3 @@ export const getSimilarQuestionsValidation = [
   query("threshold").optional().isFloat({ min: 0, max: 1 }).toFloat(),
   validationErrorHandler,
 ];
-<<<<<<< HEAD
->>>>>>> main
-=======
->>>>>>> cde9218fe5baf356dc14877cd28b85ac2bb97e58
