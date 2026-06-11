@@ -16,6 +16,10 @@ export const createQuestionValidation = [
     .isLength({ max: 5000 })
     .withMessage("Body cannot exceed 5000 characters"),
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> cde9218fe5baf356dc14877cd28b85ac2bb97e58
   validationErrorHandler,
 ];
 export const generateQuestionDraftCoachValidation = [
@@ -30,6 +34,12 @@ export const generateQuestionDraftCoachValidation = [
     .isLength({ max: 5000 })
     .withMessage("Content cannot exceed 5000 characters"),
 
+<<<<<<< HEAD
+  validationErrorHandler,
+];
+=======
+=======
+>>>>>>> cde9218fe5baf356dc14877cd28b85ac2bb97e58
     validationErrorHandler,
 ];
 export const getQuestionsValidation = [
@@ -91,3 +101,7 @@ export const getSimilarQuestionsValidation = [
   query("threshold").optional().isFloat({ min: 0, max: 1 }).toFloat(),
   validationErrorHandler,
 ];
+<<<<<<< HEAD
+>>>>>>> main
+=======
+>>>>>>> cde9218fe5baf356dc14877cd28b85ac2bb97e58

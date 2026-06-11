@@ -1,44 +1,44 @@
-import { body } from 'express-validator';
-import { validationErrorHandler } from '../../../middleware/validation-handler.js';
+import { body } from "express-validator";
+import { validationErrorHandler } from "../../../middleware/validation-handler.js";
 
 export const registerValidation = [
-  body('firstName')
+  body("firstName")
     .notEmpty()
-    .withMessage('First name is required')
+    .withMessage("First name is required")
     .isString()
-    .withMessage('First name must be a string')
+    .withMessage("First name must be a string")
     .isLength({ min: 3 })
-    .withMessage('First name must be at least 3 characters long'),
-  body('lastName')
+    .withMessage("First name must be at least 3 characters long"),
+  body("lastName")
     .notEmpty()
-    .withMessage('Last name is required')
+    .withMessage("Last name is required")
     .isString()
-    .withMessage('Last name must be a string')
+    .withMessage("Last name must be a string")
     .isLength({ min: 3 })
-    .withMessage('Last name must be at least 3 characters long'),
-  body('email')
+    .withMessage("Last name must be at least 3 characters long"),
+  body("email")
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage("Email is required")
     .isEmail()
-    .withMessage('A valid email address is required')
+    .withMessage("A valid email address is required")
     .normalizeEmail(),
-  body('password')
+  body("password")
     .notEmpty()
-    .withMessage('Password is required')
+    .withMessage("Password is required")
     .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long'),
+    .withMessage("Password must be at least 6 characters long"),
 
   validationErrorHandler,
 ];
 
 export const loginValidation = [
-  body('email')
+  body("email")
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage("Email is required")
     .isEmail()
-    .withMessage('A valid email address is required')
+    .withMessage("A valid email address is required")
     .normalizeEmail(),
-  body('password').notEmpty().withMessage('Password is required'),
+  body("password").notEmpty().withMessage("Password is required"),
 
   validationErrorHandler,
 ];
