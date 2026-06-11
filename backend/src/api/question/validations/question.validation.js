@@ -1,23 +1,58 @@
-import { body } from 'express-validator';
-import { validationErrorHandler } from '../../../middleware/validation-handler.js';
+import { body, param, query } from "express-validator";
+import { validationErrorHandler } from "../../../middleware/validation-handler.js";
 
 export const createQuestionValidation = [
-    body('title')
-        .notEmpty()
-        .withMessage('Title is required')
-        .isLength({ min: 5 })
-        .withMessage('Title must be at least 5 characters')
-        .isLength({ max: 200 })
-        .withMessage('Title cannot exceed 200 characters'),
+  body("title")
+    .notEmpty()
+    .withMessage("Title is required")
+    .isLength({ min: 5 })
+    .withMessage("Title must be at least 5 characters")
+    .isLength({ max: 200 })
+    .withMessage("Title cannot exceed 200 characters"),
 
-    body('content')
-        .notEmpty()
-        .withMessage('Body is required')
-        .isLength({ max: 5000 })
-        .withMessage('Body cannot exceed 5000 characters'),
+  body("content")
+    .notEmpty()
+    .withMessage("Body is required")
+    .isLength({ max: 5000 })
+    .withMessage("Body cannot exceed 5000 characters"),
 
-    validationErrorHandler,
+  validationErrorHandler,
 ];
+export const generateQuestionDraftCoachValidation = [
+  body("title")
+    .optional()
+    .isLength({ max: 200 })
+    .withMessage("Title cannot exceed 200 characters"),
+
+  body("content")
+    .notEmpty()
+    .withMessage("Content is required")
+    .isLength({ max: 5000 })
+    .withMessage("Content cannot exceed 5000 characters"),
+
+  validationErrorHandler,
+];
+export const assessAnswerAgainstQuestionValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("Question hash is required")
+    .matches(/^[a-f0-9]{16}$/)
+    .withMessage("Question hash must be a 16-character lowercase hex string"),
+
+  body("answerText")
+    .notEmpty()
+    .withMessage("Answer text is required")
+    .isString()
+    .withMessage("Answer text must be a string")
+    .isLength({ min: 20 })
+    .withMessage(
+      "Answer text must be at least 20 characters for a meaningful fit check",
+    )
+    .trim(),
+
+  validationErrorHandler,
+];
+
 export const getQuestionsValidation = [
   query("search")
     .optional()
