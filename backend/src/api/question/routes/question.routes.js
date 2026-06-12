@@ -53,6 +53,13 @@ router.get(
   searchQuestionsSemanticValidation,
   searchQuestionsSemanticController,
 );
+router.get(
+  "/:questionHash",
+  authenticateUser,
+  getSingleQuestionValidation,
+  getSingleQuestionController,
+);
+
 
 router.get(
   "/:questionHash/similar",
