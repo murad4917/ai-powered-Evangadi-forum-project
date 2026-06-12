@@ -5,6 +5,7 @@ import {
   assessAnswerAgainstQuestionController,
   getQuestionsController,
   searchQuestionsSemanticController,
+  getSingleQuestionController,
   getSimilarQuestionsController,
 } from "../controller/questionController.js";
 import {
@@ -13,6 +14,7 @@ import {
   assessAnswerAgainstQuestionValidation,
   getQuestionsValidation,
   searchQuestionsSemanticValidation,
+  getSingleQuestionValidation,
   getSimilarQuestionsValidation,
 } from "../validations/question.validation.js";
 import { authenticateUser } from "../../../middleware/authentication.js";
