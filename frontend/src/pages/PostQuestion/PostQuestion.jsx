@@ -1,349 +1,462 @@
 /**
- * Post Question Page: Allows users to ask new questions with AI Draft Coach feedback.
- * Route: /questions/ask
+ * Post Question: create a new forum thread with optional AI draft coach.
+ * Route: `/questions/ask`
  */
-import { useState } from 'react';
+
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Send, X } from 'lucide-react';
-import { createQuestion, generateQuestionDraftCoach } from '../../services/question/question.service';
+import {
+  Bold,
+  Check,
+  Code2,
+  Italic,
+  Link2,
+  Send,
+  Sparkles,
+} from 'lucide-react';
+import { questionService } from '../../services/question/question.service.js';
 import styles from './PostQuestion.module.css';
+
+const TITLE_MIN = 5;
+const TITLE_MAX = 255;
+const CONTENT_MIN = 10;
+
+const INITIAL_FORM = {
+  title: '',
+  content: '',
+};
+
+function validateForm({ title, content }) {
+  const errors = {};
+  const trimmedTitle = title.trim();
+  const trimmedContent = content.trim();
+
+  if (trimmedTitle.length < TITLE_MIN) {
+    errors.title = `Question title must be at least ${TITLE_MIN} characters`;
+  } else if (trimmedTitle.length > TITLE_MAX) {
+    errors.title = `Question title cannot exceed ${TITLE_MAX} characters`;
+  }
+
+  if (trimmedContent.length < CONTENT_MIN) {
+    errors.content = `Question content must be at least ${CONTENT_MIN} characters`;
+  }
+
+  return errors;
+}
+
+function wrapSelection(textarea, before, after = before) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const value = textarea.value;
+  const selected = value.slice(start, end);
+  const nextValue =
+    value.slice(0, start) + before + selected + after + value.slice(end);
+
+  return {
+    nextValue,
+    selectionStart: start + before.length,
+    selectionEnd: end + before.length,
+  };
+}
 
 export default function PostQuestion() {
   const navigate = useNavigate();
+  const contentRef = useRef(null);
 
-  // Form state
-  const [formData, setFormData] = useState({ title: '', content: '' });
-  const [errors, setErrors] = useState({});
-
-  // UI state
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCoaching, setIsCoaching] = useState(false);
-  const [showCoach, setShowCoach] = useState(false);
-  const [coachFeedback, setCoachFeedback] = useState(null);
+  const [coachTips, setCoachTips] = useState(null);
+  const [coachError, setCoachError] = useState(null);
+  const [publishedQuestion, setPublishedQuestion] = useState(null);
 
-  // Message state
-  const [error, setError] = useState(null);
-  const [successData, setSuccessData] = useState(null);
+  const contentLength = formData.content.length;
+  const isBusy = isSubmitting || isCoaching;
 
-  /**
-   * Validates form inputs
-   */
-  const validateForm = (data = formData, showAllErrors = false) => {
-    const newErrors = {};
-
-    if (!data.title.trim()) {
-      newErrors.title = 'Title is required';
-    } else if (data.title.trim().length < 5) {
-      newErrors.title = 'Title must be at least 5 characters';
-    }
-
-    if (!data.content.trim()) {
-      newErrors.content = 'Content is required';
-    } else if (data.content.trim().length < 10) {
-      newErrors.content = 'Content must be at least 10 characters';
-    }
-
-    if (showAllErrors) {
-      setErrors(newErrors);
-    }
-    return Object.keys(newErrors).length === 0;
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setFieldErrors(prev => ({ ...prev, [field]: undefined }));
+    setSubmitError(null);
   };
 
-  /**
-   * Handles form input changes
-   */
-  const handleInputChange = e => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-    setError(null);
+  const applyMarkdown = format => {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+
+    const wrappers = {
+      bold: ['**', '**'],
+      italic: ['*', '*'],
+      code: ['`', '`'],
+      link: ['[', '](url)'],
+    };
+
+    const [before, after] = wrappers[format];
+    const { nextValue, selectionStart, selectionEnd } = wrapSelection(
+      textarea,
+      before,
+      after,
+    );
+
+    updateField('content', nextValue);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(selectionStart, selectionEnd);
+    });
   };
 
-  /**
-   * Requests AI Draft Coach feedback
-   */
-  const handleGetCoachFeedback = async () => {
-    if (!validateForm()) {
-      setErrors({
-        title: formData.title.trim().length < 5 ? 'Title must be at least 5 characters' : '',
-        content: formData.content.trim().length < 10 ? 'Content must be at least 10 characters' : '',
-      });
+  const handleCoach = async () => {
+    const trimmedContent = formData.content.trim();
+
+    if (trimmedContent.length < CONTENT_MIN) {
+      setFieldErrors(prev => ({
+        ...prev,
+        content: `Question content must be at least ${CONTENT_MIN} characters`,
+      }));
       return;
     }
 
     setIsCoaching(true);
-    setError(null);
+    setCoachError(null);
+    setCoachTips(null);
 
     try {
-      const result = await generateQuestionDraftCoach({
+      const tips = await questionService.generateQuestionDraftCoach({
         title: formData.title.trim(),
-        content: formData.content.trim(),
+        content: trimmedContent,
       });
-
-      setCoachFeedback(result);
-      setShowCoach(true);
+      setCoachTips(tips);
     } catch (err) {
-      setError(err.message || 'Failed to get AI feedback. Please try again.');
+      setCoachError(err?.message || 'Failed to load AI suggestions.');
     } finally {
       setIsCoaching(false);
     }
   };
 
-  /**
-   * Submits the question form
-   */
-  const handleSubmit = async e => {
-    e.preventDefault();
+  const handleSubmit = async event => {
+    event.preventDefault();
 
-    if (!validateForm(formData, true)) {
+    const errors = validateForm(formData);
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
+    setSubmitError(null);
 
     try {
-      const result = await createQuestion({
+      const data = await questionService.createQuestion({
         title: formData.title.trim(),
         content: formData.content.trim(),
       });
-
-      // Show success state with question data
-      setSuccessData(result);
-    } catch (err) {
-      setError(err.message || 'Failed to post question. Please try again.');
+      setPublishedQuestion(data);
+    } catch {
+      setSubmitError('Failed to post question. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /**
-   * Handles success actions
-   */
-  const handleViewQuestion = () => {
-    if (successData?.questionId || successData?.id) {
-      navigate(`/question/${successData.questionId || successData.id}`);
-    }
-  };
-
   const handleAskAnother = () => {
-    setFormData({ title: '', content: '' });
-    setErrors({});
-    setShowCoach(false);
-    setCoachFeedback(null);
-    setSuccessData(null);
+    setFormData(INITIAL_FORM);
+    setFieldErrors({});
+    setSubmitError(null);
+    setCoachTips(null);
+    setCoachError(null);
+    setPublishedQuestion(null);
   };
 
-  const handleGoToDashboard = () => {
-    navigate('/dashboard');
-  };
+  if (publishedQuestion) {
+    const questionHash =
+      publishedQuestion.questionHash ?? publishedQuestion.id ?? '';
 
-  /**
-   * Renders the success overlay modal
-   */
-  if (successData) {
     return (
-      <div className={styles.postQuestion__successOverlay}>
-        <div className={styles.postQuestion__successContent}>
-          <div className={styles.postQuestion__successIcon}>✨</div>
-          <h2 className={styles.postQuestion__successTitle}>
-            Thread Published!
-          </h2>
-          <p className={styles.postQuestion__successMessage}>
-            Your question has been posted successfully.
+      <div className={styles.page}>
+        <section className={styles.header} aria-labelledby='post-question-title'>
+          <p className={styles.header__eyebrow}>Ask the cohort</p>
+          <h1 id='post-question-title' className={styles.header__title}>
+            Publish to the forum
+          </h1>
+          <p className={styles.header__description}>
+            Public threads help the whole cohort. Write as if a classmate will
+            debug your issue tomorrow. They only know what you put on the page.
           </p>
-          <div className={styles.postQuestion__successActions}>
+        </section>
+
+        <section className={styles.successCard} aria-live='polite'>
+          <div className={styles.successCard__icon} aria-hidden>
+            <Check size={28} strokeWidth={2.5} />
+          </div>
+          <h2 className={styles.successCard__title}>Thread published</h2>
+          <p className={styles.successCard__message}>
+            Your post is indexed for keyword search and embedding-based
+            similarity. Share the link in study groups, or stay on the thread to
+            answer follow-up questions from peers.
+          </p>
+          <div className={styles.successCard__actions}>
             <button
-              className={`${styles.postQuestion__button} ${styles['postQuestion__button--primary']}`}
-              onClick={handleViewQuestion}
+              type='button'
+              className={styles.successCard__link}
+              onClick={() => navigate('/dashboard')}
+            >
+              Back to Dashboard
+            </button>
+            <button
+              type='button'
+              className={styles.successCard__primary}
+              onClick={() => navigate(`/question/${questionHash}`)}
             >
               View Question
             </button>
             <button
-              className={`${styles.postQuestion__button} ${styles['postQuestion__button--secondary']}`}
+              type='button'
+              className={styles.successCard__secondary}
               onClick={handleAskAnother}
             >
               Ask Another
             </button>
-            <button
-              className={`${styles.postQuestion__button} ${styles['postQuestion__button--secondary']}`}
-              onClick={handleGoToDashboard}
-            >
-              Go to Dashboard
-            </button>
           </div>
-        </div>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className={styles.postQuestion}>
-      {/* Header */}
-      <div className={styles.postQuestion__header}>
-        <h1 className={styles.postQuestion__title}>Ask a Question</h1>
-        <p className={styles.postQuestion__subtitle}>
-          Share your question with the community and get answers from experts.
+    <div className={styles.page}>
+      <section className={styles.header} aria-labelledby='post-question-title'>
+        <p className={styles.header__eyebrow}>Ask the cohort</p>
+        <h1 id='post-question-title' className={styles.header__title}>
+          Publish to the forum
+        </h1>
+        <p className={styles.header__description}>
+          Public threads help the whole cohort. Write as if a classmate will
+          debug your issue tomorrow. They only know what you put on the page.
         </p>
-      </div>
+      </section>
 
-      {/* Guidelines */}
-      <div className={styles.postQuestion__guidelines}>
-        <h3 className={styles.postQuestion__guidelinesTitle}>
-          Guidelines for a Good Question
-        </h3>
-        <ul className={styles.postQuestion__guidelinesList}>
-          <li className={styles.postQuestion__guidelinesItem}>
-            Keep your title clear and concise
-          </li>
-          <li className={styles.postQuestion__guidelinesItem}>
-            Provide enough context in the description
-          </li>
-          <li className={styles.postQuestion__guidelinesItem}>
-            Use simple, direct language
-          </li>
-          <li className={styles.postQuestion__guidelinesItem}>
-            Use our AI suggestions to improve your question
-          </li>
-        </ul>
-      </div>
+      <section className={styles.guide} aria-label='Posting guidance'>
+        <h2 className={styles.guide__title}>
+          Write questions people can answer in one pass
+        </h2>
+        <p className={styles.guide__intro}>
+          Mentors volunteer their time. Give them runnable context, expected vs
+          actual behavior, and a tight scope so they can reproduce the issue
+          without guessing your setup.
+        </p>
 
-      {/* Error Message */}
-      {error && <div className={styles.postQuestion__error}>{error}</div>}
-
-      {/* Form */}
-      <form className={styles.postQuestion__form} onSubmit={handleSubmit}>
-        {/* Title Input */}
-        <div className={styles.postQuestion__formGroup}>
-          <label className={styles.postQuestion__label} htmlFor='title'>
-            Question Title *
-          </label>
-          <input
-            id='title'
-            type='text'
-            name='title'
-            value={formData.title}
-            onChange={handleInputChange}
-            placeholder='What is your question about?'
-            className={`${styles.postQuestion__input} ${styles.postQuestion__titleInput}`}
-            disabled={isSubmitting || isCoaching}
-          />
-          <div className={styles.postQuestion__charCount}>
-            {formData.title.length} / 5 (minimum)
-          </div>
-          {errors.title && (
-            <div className={styles.postQuestion__validationError}>
-              {errors.title}
-            </div>
-          )}
-        </div>
-
-        {/* Content Textarea */}
-        <div className={styles.postQuestion__formGroup}>
-          <label className={styles.postQuestion__label} htmlFor='content'>
-            Question Description *
-          </label>
-          <textarea
-            id='content'
-            name='content'
-            value={formData.content}
-            onChange={handleInputChange}
-            placeholder='Provide more details about your question. Include any relevant context or code snippets.'
-            className={styles.postQuestion__textarea}
-            disabled={isSubmitting || isCoaching}
-          />
-          <div className={styles.postQuestion__charCount}>
-            {formData.content.length} / 10 (minimum)
-          </div>
-          {errors.content && (
-            <div className={styles.postQuestion__validationError}>
-              {errors.content}
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className={styles.postQuestion__actions}>
-          <button
-            type='button'
-            className={`${styles.postQuestion__button} ${styles['postQuestion__button--secondary']}`}
-            onClick={handleGetCoachFeedback}
-            disabled={isSubmitting || isCoaching}
-          >
-            {isCoaching ? (
-              <>
-                <span className={styles.postQuestion__loader} />
-                Getting Suggestions...
-              </>
-            ) : (
-              <>
-                <Sparkles size={18} />
-                AI Suggestions
-              </>
-            )}
-          </button>
-
-          <button
-            type='submit'
-            className={`${styles.postQuestion__button} ${styles['postQuestion__button--primary']}`}
-            disabled={isSubmitting || isCoaching}
-          >
-            {isSubmitting ? (
-              <>
-                <span className={styles.postQuestion__loader} />
-                Posting...
-              </>
-            ) : (
-              <>
-                <Send size={18} />
-                Post Question
-              </>
-            )}
-          </button>
-
-          <button
-            type='button'
-            className={`${styles.postQuestion__button} ${styles['postQuestion__button--secondary']}`}
-            onClick={() => navigate('/dashboard')}
-            disabled={isSubmitting || isCoaching}
-          >
-            <X size={18} />
-            Cancel
-          </button>
-        </div>
-      </form>
-
-      {/* AI Coach Feedback Panel */}
-      {showCoach && coachFeedback && (
-        <div className={styles.postQuestion__coachPanel}>
-          <div className={styles.postQuestion__coachHeader}>
-            <Sparkles size={20} style={{ color: 'var(--primary)' }} />
-            <h3 className={styles.postQuestion__coachTitle}>
-              AI Suggestions for Your Question
+        <div className={styles.guide__columns}>
+          <div>
+            <h3 className={styles.guide__sectionTitle}>
+              Checklist before you post
             </h3>
+            <ul className={styles.guide__list}>
+              <li>Clear title that states the bug or goal</li>
+              <li>Repro steps: what you clicked, what you expected</li>
+              <li>Minimal code blocks with language tags</li>
+              <li>Exact error messages or screenshots described in text</li>
+            </ul>
           </div>
-          <div className={styles.postQuestion__coachTips}>
-            {coachFeedback.tips && Array.isArray(coachFeedback.tips) ? (
-              coachFeedback.tips.map((tip, index) => (
-                <div key={index} className={styles.postQuestion__coachTip}>
-                  {tip}
-                </div>
-              ))
-            ) : (
-              <div className={styles.postQuestion__coachTip}>
-                {coachFeedback.tips || 'Your question looks great!'}
-              </div>
-            )}
+
+          <div>
+            <h3 className={styles.guide__sectionTitle}>
+              Validation rules (enforced by the form)
+            </h3>
+            <ul className={styles.guide__list}>
+              <li>
+                Title length: {TITLE_MIN} to {TITLE_MAX} characters
+              </li>
+              <li>Body length: minimum {CONTENT_MIN} characters</li>
+              <li>Single topic: split unrelated bugs into separate threads</li>
+            </ul>
           </div>
         </div>
-      )}
+      </section>
+
+      <section className={styles.formCard}>
+        <form onSubmit={handleSubmit} noValidate>
+          {submitError ? (
+            <div className={styles.submitError} role='alert'>
+              {submitError}
+            </div>
+          ) : null}
+
+          <div className={styles.field}>
+            <label className={styles.field__label} htmlFor='question-title'>
+              Title
+            </label>
+            <p className={styles.field__hint}>
+              Be specific and imagine you&apos;re asking a question to another
+              person.
+            </p>
+            <input
+              id='question-title'
+              type='text'
+              className={`${styles.field__input} ${
+                fieldErrors.title ? styles['field__input--error'] : ''
+              }`}
+              value={formData.title}
+              onChange={event => updateField('title', event.target.value)}
+              placeholder='e.g. How do I handle state management using Context API in React?'
+              disabled={isBusy}
+              aria-invalid={Boolean(fieldErrors.title)}
+              aria-describedby={
+                fieldErrors.title ? 'question-title-error' : undefined
+              }
+            />
+            {fieldErrors.title ? (
+              <p
+                id='question-title-error'
+                className={styles.field__error}
+                role='alert'
+              >
+                {fieldErrors.title}
+              </p>
+            ) : null}
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.field__label} htmlFor='question-content'>
+              What are the details of your problem?
+            </label>
+            <p className={styles.field__hint}>
+              Introduce the problem and expand on what you put in the title.
+              Minimum {CONTENT_MIN} characters.
+            </p>
+
+            <div
+              className={`${styles.editor} ${
+                fieldErrors.content ? styles['editor--error'] : ''
+              }`}
+            >
+              <div className={styles.editor__toolbar}>
+                <div className={styles.editor__tools}>
+                  <button
+                    type='button'
+                    className={styles.editor__tool}
+                    onClick={() => applyMarkdown('bold')}
+                    disabled={isBusy}
+                    aria-label='Bold'
+                    title='Bold'
+                  >
+                    <Bold size={16} aria-hidden />
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.editor__tool}
+                    onClick={() => applyMarkdown('italic')}
+                    disabled={isBusy}
+                    aria-label='Italic'
+                    title='Italic'
+                  >
+                    <Italic size={16} aria-hidden />
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.editor__tool}
+                    onClick={() => applyMarkdown('code')}
+                    disabled={isBusy}
+                    aria-label='Code'
+                    title='Code'
+                  >
+                    <Code2 size={16} aria-hidden />
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.editor__tool}
+                    onClick={() => applyMarkdown('link')}
+                    disabled={isBusy}
+                    aria-label='Link'
+                    title='Link'
+                  >
+                    <Link2 size={16} aria-hidden />
+                  </button>
+                </div>
+                <span className={styles.editor__count}>
+                  {contentLength} characters
+                </span>
+              </div>
+
+              <textarea
+                id='question-content'
+                ref={contentRef}
+                className={styles.editor__textarea}
+                value={formData.content}
+                onChange={event => updateField('content', event.target.value)}
+                placeholder='Include all the information someone would need to answer your question... You can use Markdown to format your code!'
+                disabled={isBusy}
+                aria-invalid={Boolean(fieldErrors.content)}
+                aria-describedby={
+                  fieldErrors.content ? 'question-content-error' : undefined
+                }
+              />
+            </div>
+
+            {fieldErrors.content ? (
+              <p
+                id='question-content-error'
+                className={styles.field__error}
+                role='alert'
+              >
+                {fieldErrors.content}
+              </p>
+            ) : null}
+
+            <div className={styles.aiRow}>
+              <button
+                type='button'
+                className={styles.aiButton}
+                onClick={handleCoach}
+                disabled={isBusy}
+              >
+                <Sparkles size={16} aria-hidden />
+                {isCoaching ? 'Loading suggestions...' : 'AI suggestions'}
+              </button>
+              <span className={styles.aiHint}>
+                Suggestions only. You still choose what to post.
+              </span>
+            </div>
+
+            {coachError ? (
+              <div className={styles.coachPanel} role='alert'>
+                <p className={styles.coachPanel__error}>{coachError}</p>
+              </div>
+            ) : null}
+
+            {coachTips?.length ? (
+              <div className={styles.coachPanel}>
+                <h3 className={styles.coachPanel__title}>AI draft coach</h3>
+                <ul className={styles.coachPanel__list}>
+                  {coachTips.map(tip => (
+                    <li key={tip}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+
+          <div className={styles.actions}>
+            <button
+              type='button'
+              className={styles.cancelLink}
+              onClick={() => navigate('/dashboard')}
+              disabled={isBusy}
+            >
+              Cancel
+            </button>
+            <button
+              type='submit'
+              className={styles.submitButton}
+              disabled={isBusy}
+            >
+              <Send size={16} aria-hidden />
+              {isSubmitting ? 'Posting...' : 'Post Question'}
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }

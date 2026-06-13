@@ -1,71 +1,66 @@
-/* ─── Base Page Canvas ──────────────────────────────────────────────── */
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-  width: 100%;
+  display: grid;
+  gap: var(--spacing-2xl);
 }
 
-/* ─── Top Unified Main Module Card ──────────────────────────────────── */
-.mainContentCard {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 2.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+.hero {
+  display: grid;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
 }
 
 .hero__copy {
-  margin-bottom: 2rem;
+  max-width: 52rem;
 }
 
 .hero__eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #ea580c; /* Theme Orange Subheadings */
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.12em;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .hero__title {
-  font-size: 2.15rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.75rem;
+  font-size: var(--text-3xl);
+  line-height: 1.1;
+  margin-bottom: var(--spacing-md);
 }
 
 .hero__description {
-  color: #6b7280;
-  font-size: 0.875rem;
-  line-height: 1.6;
   max-width: 44rem;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.8;
 }
 
-/* ─── Actions Row Deck (Forces Strict Side-By-Side Layout) ────────── */
 .hero__quickActions {
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(3, 1fr);
-  margin-bottom: 2rem;
+  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
 }
 
 .quickAction {
   display: flex;
   align-items: flex-start;
-  text-align: left;
-  gap: 1rem;
-  padding: 1.25rem;
-  background-color: #f9fafb;
-  border: 1px solid #f3f4f6;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background-color: var(--surface-container-low);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
-.quickAction:hover {
-  background-color: #f3f4f6;
-  border-color: #e5e7eb;
+.quickAction:hover,
+.quickAction:focus-visible {
+  transform: translateY(-1px);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .quickAction__icon {
@@ -73,213 +68,110 @@
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  min-width: 2.5rem;
-  border-radius: 6px;
-  border: 1px solid #ffedd5;
-  background-color: #fff7ed;
-  color: #ea580c;
-}
-
-.quickAction__text {
-  display: flex;
-  flex-direction: column;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
 }
 
 .quickAction__label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 0.25rem;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--spacing-xs);
 }
 
 .quickAction__detail {
-  color: #6b7280;
-  font-size: 0.75rem;
-  line-height: 1.4;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.7;
 }
 
-/* ─── Structural Divider Utilities ──────────────────────────────────── */
-.decorativeDivider {
-  border: none;
-  border-top: 1px solid #f3f4f6;
-  margin-bottom: 1.25rem;
-}
-
-.statsIntroText {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin-bottom: 1.25rem;
-}
-
-/* ─── Metrics Dashboard Counters Row ────────────────────────────────── */
-.statsGrid {
+.statsSection {
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.statCard {
-  padding: 1.25rem 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #f3f4f6;
-  background-color: #f9fafb;
-}
-
-.statCard__label {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: #9ca3af;
-  margin-bottom: 0.35rem;
-}
-
-.statCard__value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-/* ─── Bottom Discussion Feed Section Card ───────────────────────────── */
-.feedCardContainer {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 2.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
 }
 
 .statsHeader {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: var(--spacing-md);
   align-items: center;
-  border-bottom: 1px solid #f3f4f6;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.5rem;
+}
+
+.statsHeader__eyebrow {
+  color: var(--primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--spacing-xs);
 }
 
 .statsHeader__title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.25rem;
+  font-size: var(--text-2xl);
+  margin: 0;
 }
 
 .statsHeader__subtitle {
-  color: #9ca3af;
-  font-size: 0.75rem;
+  color: var(--text-secondary);
+  max-width: 40rem;
+  line-height: 1.7;
 }
 
-.feedBadgeButton {
-  background-color: #f97316;
-  color: #ffffff;
-  font-size: 0.65rem;
-  font-weight: 700;
+.statsHeader__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.statsGrid {
+  display: grid;
+  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.statCard {
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--surface-container-low);
+}
+
+.statCard__label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.5rem 0.85rem;
-  border-radius: 4px;
-  user-select: none;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.statCard__value {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
 .listPanel {
-  width: 100%;
+  display: grid;
+  gap: var(--spacing-md);
 }
 
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* ─── Loading Spinner Structural Layout ──────────────────────────────── */
-.spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #ea580c; /* Orange matching mockup theme color */
-  border-radius: 50%;
-  margin-bottom: 1rem;
-  animation: spin 0.8s linear infinite;
-  will-change: transform;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* ─── State Indicator Container Boxes ────────────────────────────────── */
-.skeletonContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 5rem 1rem;
-  width: 100%;
-}
-
-.emptyContainer,
-.errorContainer {
   display: grid;
-  place-items: center;
-  padding: 5rem 1rem;
-  width: 100%;
+  gap: var(--spacing-md);
 }
 
-.emptyBoxInner {
-  border: 1px dashed #d1d5db;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  padding: 3rem 4rem;
-  color: #4b5563;
-  font-size: 0.85rem;
-  text-align: center;
-  width: 100%;
-  max-width: 32rem;
-}
-
-.errorBoxInner {
-  border: 1px solid #fca5a5;
-  background-color: #fef2f2;
-  border-radius: 8px;
-  padding: 3rem 4rem;
-  color: #dc2626;
-  font-size: 0.85rem;
-  text-align: center;
-  width: 100%;
-  max-width: 18rem;
-}
-
-.loadingStateText {
-  color: #6b7280;
-  font-size: 0.85rem;
-  text-align: center;
-}
-
-/* ─── Responsive Viewports ─────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .hero__quickActions {
-    grid-template-columns: 1fr;
-  }
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .mainContentCard,
-  .feedCardContainer {
-    padding: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .statsGrid {
-    grid-template-columns: 1fr;
-  }
-  .statsHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+@media (min-width: 768px) {
+  .hero {
+    grid-template-columns: 1.7fr 1fr;
+    align-items: start;
   }
 }

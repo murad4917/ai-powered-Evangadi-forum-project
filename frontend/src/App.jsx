@@ -14,6 +14,8 @@ import Landing from './pages/Landing/Landing';
 // import MyQuestions from './pages/MyQuestions/MyQuestions';
 import PostQuestion from './pages/PostQuestion/PostQuestion';
 import QuestionDetail from './pages/QuestionDetail/QuestionDetail';
+import RagDocuments from './pages/RagDocuments/RagDocuments';
+
 function App() {
   return (
     <BrowserRouter>
@@ -37,7 +39,7 @@ function App() {
               path='/questions/ask'
               element={
                 <ProtectedRoute>
-                 <PostQuestion />
+                  <PostQuestion />
                 </ProtectedRoute>
               }
             />
@@ -45,15 +47,15 @@ function App() {
               path='/my-questions'
               element={
                 <ProtectedRoute>
-                 <MyQuestions />
+                  <MyQuestions />
                 </ProtectedRoute>
               }
             />
             <Route
-              path='/question/:id'
+              path='/question/:questionHash'
               element={
                 <ProtectedRoute>
-                 <QuestionDetail />
+                  <QuestionDetail />
                 </ProtectedRoute>
               }
             />
@@ -61,7 +63,7 @@ function App() {
               path='/rag-documents'
               element={
                 <ProtectedRoute>
-                  <h1>RAG Documents Page</h1>
+                  <RagDocuments />
                 </ProtectedRoute>
               }
             />
