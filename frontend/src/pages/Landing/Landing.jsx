@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Landing.module.css';
 
+
 export default function Landing() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
