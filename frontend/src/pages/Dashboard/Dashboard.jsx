@@ -4,11 +4,10 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, MessageCircle, Sparkles } from "lucide-react";
+import { Edit3, BarChart3, FileText } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 import { questionService } from "../../services/question/question.service.js";
 import QuestionCard from "../../components/QuestionCard/QuestionCard.jsx";
-import pageStates from "../../styles/pageStates.module.css";
 import styles from "./Dashboard.module.css";
 
 export default function Dashboard() {
@@ -43,7 +42,7 @@ export default function Dashboard() {
           search: searchQuery,
         });
         if (!isCancelled) {
-          setQuestions(data);
+          setQuestions(data?.data || data || []);
         }
       } catch (loadError) {
         if (!isCancelled) {
@@ -74,7 +73,7 @@ export default function Dashboard() {
       (q) => (q.answerCount || 0) === 0,
     ).length;
     const yours = questions.filter(
-      (q) => String(q.author?.id) === String(user?.id),
+      (q) => String(q.author?.id) === String(user?.id || user?.userId),
     ).length;
 
     return [
@@ -88,32 +87,30 @@ export default function Dashboard() {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div
-          className={`${pageStates.pageStates__message} ${pageStates["pageStates__message--loading"]}`}
-        >
-          Loading snapshot for the list below...
+        <div className={styles.skeletonContainer}>
+          {/* Animated Spinner Ring */}
+          <div className={styles.spinner} role="status" aria-label="loading" />
+          <div className={styles.loadingStateText}>
+            Loading recent questions...
+          </div>
         </div>
       );
     }
 
     if (error) {
       return (
-        <div
-          className={`${pageStates.pageStates__message} ${pageStates["pageStates__message--error"]}`}
-          role="alert"
-        >
-          {error}
+        <div className={styles.errorContainer}>
+          <div className={styles.errorBoxInner}>Failed to load questions.</div>
         </div>
       );
     }
 
     if (questions.length === 0) {
       return (
-        <div
-          className={`${pageStates.pageStates__message} ${pageStates["pageStates__message--empty"]}`}
-        >
-          No questions found. Be the first to ask! Use the search bar above or
-          create a new question.
+        <div className={styles.emptyContainer}>
+          <div className={styles.emptyBoxInner}>
+            No questions found. Be the first to ask!
+          </div>
         </div>
       );
     }
@@ -133,9 +130,11 @@ export default function Dashboard() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
+      {/* ─── Upper Unified Dashboard Control Card ────────────────────────── */}
+      <div className={styles.mainContentCard}>
+        {/* Welcome Section */}
         <div className={styles.hero__copy}>
-          <p className={styles.hero__eyebrow}>Forum home</p>
+          <p className={styles.hero__eyebrow}>Forum Home</p>
           <h1 className={styles.hero__title}>
             Good to see you, {user?.firstName || "learner"}.
           </h1>
@@ -145,6 +144,7 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Quick Action Item Rows */}
         <div className={styles.hero__quickActions}>
           <button
             type="button"
@@ -152,12 +152,12 @@ export default function Dashboard() {
             onClick={() => navigate("/questions/ask")}
           >
             <span className={styles.quickAction__icon}>
-              <ArrowRight size={18} />
+              <Edit3 size={18} />
             </span>
-            <div>
+            <div className={styles.quickAction__text}>
               <p className={styles.quickAction__label}>New question</p>
               <p className={styles.quickAction__detail}>
-                Share context, errors, and what you already tried.
+                Share context, errors, and what you already tried
               </p>
             </div>
           </button>
@@ -168,12 +168,12 @@ export default function Dashboard() {
             onClick={() => navigate("/my-questions")}
           >
             <span className={styles.quickAction__icon}>
-              <MessageCircle size={18} />
+              <BarChart3 size={18} />
             </span>
-            <div>
+            <div className={styles.quickAction__text}>
               <p className={styles.quickAction__label}>Your topics</p>
               <p className={styles.quickAction__detail}>
-                Filtered list of threads you authored.
+                Filtered list of threads you authored
               </p>
             </div>
           </button>
@@ -184,36 +184,26 @@ export default function Dashboard() {
             onClick={() => navigate("/rag-documents")}
           >
             <span className={styles.quickAction__icon}>
-              <BookOpen size={18} />
+              <FileText size={18} />
             </span>
-            <div>
+            <div className={styles.quickAction__text}>
               <p className={styles.quickAction__label}>Knowledge base</p>
               <p className={styles.quickAction__detail}>
-                Course library, uploads, and retrieval-backed context.
+                Course library, uploads, and retrieval-backed context for
+                threads
               </p>
             </div>
           </button>
         </div>
-      </section>
 
-      <section className={styles.statsSection}>
-        <div className={styles.statsHeader}>
-          <div>
-            <p className={styles.statsHeader__eyebrow}>Forum snapshot</p>
-            <h2 className={styles.statsHeader__title}>Discussion feed</h2>
-            <p className={styles.statsHeader__subtitle}>
-              {searchQuery
-                ? `Showing ${searchMode} search results for “${searchQuery}”.`
-                : "Your threads use a slim left accent in this list."}
-            </p>
-          </div>
+        <hr className={styles.decorativeDivider} />
 
-          <div className={styles.statsHeader__meta}>
-            <Sparkles size={16} />
-            <span>{questions.length} threads loaded</span>
-          </div>
-        </div>
+        <p className={styles.statsIntroText}>
+          Figures below describe the newest threads in this feed (up to 100 from
+          the API).
+        </p>
 
+        {/* Metric Overview Panels */}
         <div className={styles.statsGrid}>
           {stats.map((stat) => (
             <div key={stat.label} className={styles.statCard}>
@@ -222,10 +212,28 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      <section className={styles.listPanel} aria-live="polite">
-        {renderContent()}
+      {/* ─── Lower Discussion Feed Card ─────────────────────────────────── */}
+      <section className={styles.feedCardContainer}>
+        <div className={styles.statsHeader}>
+          <div>
+            <h2 className={styles.statsHeader__title}>Discussion feed</h2>
+            <p className={styles.statsHeader__subtitle}>
+              {searchQuery
+                ? `Showing ${searchMode} search results for “${searchQuery}”.`
+                : "Your threads use a slim left accent in this list."}
+            </p>
+          </div>
+
+          <div className={styles.feedBadgeButton}>
+            <span>Newest Threads</span>
+          </div>
+        </div>
+
+        <div className={styles.listPanel} aria-live="polite">
+          {renderContent()}
+        </div>
       </section>
     </div>
   );
