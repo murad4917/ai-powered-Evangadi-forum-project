@@ -1,7 +1,7 @@
 import express from 'express';
 import authRoutes from './auth/routes/auth.routes.js';
 import questionRoutes from './question/routes/question.routes.js';
-import answersRoutes from './answer/routes/answer.routes.js';
+import answersRoutes from './answers/routes/answer.routes.js';
 
 export const mainRouter = express.Router();
 

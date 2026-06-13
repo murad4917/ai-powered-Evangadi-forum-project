@@ -11,7 +11,7 @@ import {
   createAnswerValidation,
   getAnswersValidation,
   updateAnswerValidation,
-} from '../validations/answer.validation.js';
+} from '../validation/answer.validation.js';
 import { authenticateUser } from '../../../middleware/authentication.js';
 
 const router = express.Router();
