@@ -147,3 +147,12 @@ export const questionService = {
   assessAnswerFit,
   getSimilarQuestions,
 };
+
+export {
+  getQuestions,
+  createQuestion,
+  generateQuestionDraftCoach,
+  getSingleQuestion,
+  assessAnswerFit,
+  getSimilarQuestions,
+};
