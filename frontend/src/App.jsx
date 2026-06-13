@@ -11,7 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import Auth from './pages/Auth/Auth';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Landing from './pages/Landing/Landing';
-
+import PostQuestion from './pages/PostQuestion/PostQuestion';
 import QuestionDetail from './pages/QuestionDetail/QuestionDetail';
 import RagDocuments from './pages/RagDocuments/RagDocuments';
 
