@@ -5,6 +5,7 @@ import {
   assessAnswerAgainstQuestionController,
   getQuestionsController,
   searchQuestionsSemanticController,
+  getSingleQuestionController,
   getSimilarQuestionsController,
 } from "../controller/questionController.js";
 import {
@@ -13,6 +14,7 @@ import {
   assessAnswerAgainstQuestionValidation,
   getQuestionsValidation,
   searchQuestionsSemanticValidation,
+  getSingleQuestionValidation,
   getSimilarQuestionsValidation,
 } from "../validations/question.validation.js";
 import { authenticateUser } from "../../../middleware/authentication.js";
@@ -53,6 +55,13 @@ router.get(
   searchQuestionsSemanticValidation,
   searchQuestionsSemanticController,
 );
+router.get(
+  "/:questionHash",
+  authenticateUser,
+  getSingleQuestionValidation,
+  getSingleQuestionController,
+);
+
 
 router.get(
   "/:questionHash/similar",
