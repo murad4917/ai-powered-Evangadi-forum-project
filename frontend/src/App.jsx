@@ -10,6 +10,7 @@ import Layout from './components/Layout/Layout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import Auth from './pages/Auth/Auth';
 import Dashboard from './pages/Dashboard/Dashboard';
+import MyQuestions from './pages/MyQuestions/MyQuestions';
 import Landing from './pages/Landing/Landing';
 
 function App() {
@@ -43,7 +44,7 @@ function App() {
               path='/my-questions'
               element={
                 <ProtectedRoute>
-                  <h1>My Questions Page</h1>
+                  <MyQuestions />
                 </ProtectedRoute>
               }
             />
