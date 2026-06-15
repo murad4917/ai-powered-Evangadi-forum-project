@@ -10,19 +10,82 @@ import {
   MessageSquare,
   Search,
   PenSquare,
-  Library,
+  Package,
   ArrowRight,
   CheckCircle2,
-  Layers,
   FileText,
   Database,
+  BarChart3,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Landing.module.css';
 
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-48px' },
+  transition: { duration: 0.45, ease: 'easeOut' },
+};
+
+const capabilityCards = [
+  {
+    icon: Search,
+    title: 'Find related work',
+    body: 'Keyword filters for exact matches, plus similarity search when you are still shaping the right vocabulary.',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Readable threads',
+    body: 'Questions and answers stay structured so the group can reuse explanations before exams and interviews.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Lightweight AI help',
+    body: 'Suggestions on your question draft and a quick relevance check on answer drafts. Always your choice to apply or post.',
+  },
+  {
+    icon: Package,
+    title: 'RAG over your course library',
+    body: 'Instructors and cohorts add PDFs, syllabi, and notes into a controlled corpus. When you ask, the system retrieves the most relevant passages and attaches them to the prompt, so explanations stay tied to your class materials, not the open web.',
+  },
+];
+
+const processSteps = [
+  {
+    icon: PenSquare,
+    title: 'Ask with context',
+    text: 'Title, environment, errors, and what you tried, so peers reproduce before they teach.',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Get answers',
+    text: 'Replies live in one thread with markdown and code blocks, visible to everyone in the cohort.',
+  },
+  {
+    icon: Search,
+    title: 'Search two ways',
+    text: 'Classic text search on the feed, or semantic search when you want “questions like this one.”',
+  },
+  {
+    icon: BarChart3,
+    title: 'Own your trail',
+    text: (
+      <>
+        Your topics list keeps authorship clear. The Knowledge base hosts
+        uploads and RAG retrieval so answers can cite your materials. See{' '}
+        <strong>Course RAG</strong> above for the full pipeline.
+      </>
+    ),
+  },
+];
+
 export default function Landing() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+
+  const goToAuth = (mode = 'login') => {
+    navigate('/auth', { state: { mode } });
+  };
 
   const scrollToHowItWorks = () => {
     document
@@ -47,7 +110,7 @@ export default function Landing() {
             aria-label='Evangadi Forum home'
           >
             <span className={styles.landing__brandMark} aria-hidden>
-              <MessageSquare size={20} strokeWidth={2} />
+              E
             </span>
             <span className={styles.landing__brandText}>
               <span className={styles.landing__brandName}>Evangadi Forum</span>
@@ -72,7 +135,6 @@ export default function Landing() {
             >
               Course RAG
             </button>
-
             <button
               type='button'
               className={styles.landing__navLink}
@@ -89,7 +151,7 @@ export default function Landing() {
                 className={styles.landing__btnPrimary}
                 onClick={() => navigate('/dashboard')}
               >
-                Open forum
+                Go to Dashboard
                 <ArrowRight size={16} aria-hidden />
               </button>
             ) : (
@@ -97,14 +159,14 @@ export default function Landing() {
                 <button
                   type='button'
                   className={styles.landing__btnGhost}
-                  onClick={() => navigate('/auth')}
+                  onClick={() => goToAuth('login')}
                 >
                   Sign in
                 </button>
                 <button
                   type='button'
                   className={styles.landing__btnPrimary}
-                  onClick={() => navigate('/auth')}
+                  onClick={() => goToAuth('register')}
                 >
                   Create account
                 </button>
@@ -123,7 +185,7 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Sparkles size={14} aria-hidden />
+                <Search size={14} aria-hidden />
                 Keyword search + embedding similarity
               </Motion.p>
               <Motion.h1
@@ -162,10 +224,12 @@ export default function Landing() {
                   type='button'
                   className={styles.landing__btnPrimary}
                   onClick={() =>
-                    navigate(isAuthenticated ? '/dashboard' : '/auth')
+                    navigate(isAuthenticated ? '/dashboard' : '/auth', {
+                      state: isAuthenticated ? undefined : { mode: 'register' },
+                    })
                   }
                 >
-                  {isAuthenticated ? 'Go to home' : 'Get started'}
+                  {isAuthenticated ? 'Go to Dashboard' : 'Get started'}
                   <ArrowRight size={16} aria-hidden />
                 </button>
                 {!isAuthenticated && (
@@ -235,7 +299,11 @@ export default function Landing() {
               courses and reduces “confident but wrong” generic answers.
             </p>
             <div className={styles.landing__ragPipeline}>
-              <div className={styles.landing__ragStep}>
+              <Motion.article
+                className={styles.landing__ragStep}
+                {...fadeUp}
+                transition={{ ...fadeUp.transition, delay: 0 }}
+              >
                 <span className={styles.landing__ragStepIcon} aria-hidden>
                   <FileText size={20} />
                 </span>
@@ -245,8 +313,12 @@ export default function Landing() {
                   chunks and store embeddings the same way we already embed
                   questions, so retrieval stays fast and auditable.
                 </p>
-              </div>
-              <div className={styles.landing__ragStep}>
+              </Motion.article>
+              <Motion.article
+                className={styles.landing__ragStep}
+                {...fadeUp}
+                transition={{ ...fadeUp.transition, delay: 0.08 }}
+              >
                 <span className={styles.landing__ragStepIcon} aria-hidden>
                   <Database size={20} />
                 </span>
@@ -259,8 +331,12 @@ export default function Landing() {
                   just other threads. That is ideal for “what does the syllabus
                   say about…” style questions.
                 </p>
-              </div>
-              <div className={styles.landing__ragStep}>
+              </Motion.article>
+              <Motion.article
+                className={styles.landing__ragStep}
+                {...fadeUp}
+                transition={{ ...fadeUp.transition, delay: 0.16 }}
+              >
                 <span className={styles.landing__ragStepIcon} aria-hidden>
                   <Sparkles size={20} />
                 </span>
@@ -273,7 +349,7 @@ export default function Landing() {
                   makes it obvious when an answer drew on RAG versus peer
                   replies alone.
                 </p>
-              </div>
+              </Motion.article>
             </div>
             <p className={styles.landing__ragFootnote}>
               Live forum threads, semantic question search, draft/fit AI
@@ -287,7 +363,9 @@ export default function Landing() {
         {!isAuthenticated && (
           <>
             <section className={styles.landing__capabilities}>
-              <div className={styles.landing__sectionInner}>
+              <div
+                className={`${styles.landing__sectionInner} ${styles.landing__sectionInnerCentered}`}
+              >
                 <h2 className={styles.landing__sectionTitle}>
                   Built for cohort coursework
                 </h2>
@@ -296,58 +374,28 @@ export default function Landing() {
                   “marketing product.”
                 </p>
                 <div className={styles.landing__cardGrid}>
-                  <article className={styles.landing__card}>
-                    <div className={styles.landing__cardIcon} aria-hidden>
-                      <Search size={22} strokeWidth={1.75} />
-                    </div>
-                    <h3 className={styles.landing__cardTitle}>
-                      Find related work
-                    </h3>
-                    <p className={styles.landing__cardBody}>
-                      Keyword filters for exact matches, plus similarity search
-                      when you are still shaping the right vocabulary.
-                    </p>
-                  </article>
-                  <article className={styles.landing__card}>
-                    <div className={styles.landing__cardIcon} aria-hidden>
-                      <MessageSquare size={22} strokeWidth={1.75} />
-                    </div>
-                    <h3 className={styles.landing__cardTitle}>
-                      Readable threads
-                    </h3>
-                    <p className={styles.landing__cardBody}>
-                      Questions and answers stay structured so the group can
-                      reuse explanations before exams and interviews.
-                    </p>
-                  </article>
-                  <article className={styles.landing__card}>
-                    <div className={styles.landing__cardIcon} aria-hidden>
-                      <Sparkles size={22} strokeWidth={1.75} />
-                    </div>
-                    <h3 className={styles.landing__cardTitle}>
-                      Lightweight AI help
-                    </h3>
-                    <p className={styles.landing__cardBody}>
-                      Suggestions on your question draft and a quick relevance
-                      check on answer drafts. Always your choice to apply or
-                      post.
-                    </p>
-                  </article>
-                  <article className={`${styles.landing__card} `}>
-                    <div className={styles.landing__cardIcon} aria-hidden>
-                      <Layers size={22} strokeWidth={1.75} />
-                    </div>
-                    <h3 className={styles.landing__cardTitle}>
-                      RAG over your course library
-                    </h3>
-                    <p className={styles.landing__cardBody}>
-                      Instructors and cohorts add PDFs, syllabi, and notes into
-                      a controlled corpus. When you ask, the system retrieves
-                      the most relevant passages and attaches them to the
-                      prompt, so explanations stay tied to your class materials,
-                      not the open web.
-                    </p>
-                  </article>
+                  {capabilityCards.map((card, index) => {
+                    const Icon = card.icon;
+                    return (
+                      <Motion.article
+                        key={card.title}
+                        className={styles.landing__card}
+                        {...fadeUp}
+                        transition={{
+                          ...fadeUp.transition,
+                          delay: index * 0.08,
+                        }}
+                      >
+                        <div className={styles.landing__cardIcon} aria-hidden>
+                          <Icon size={22} strokeWidth={1.75} />
+                        </div>
+                        <h3 className={styles.landing__cardTitle}>
+                          {card.title}
+                        </h3>
+                        <p className={styles.landing__cardBody}>{card.body}</p>
+                      </Motion.article>
+                    );
+                  })}
                 </div>
               </div>
             </section>
@@ -357,7 +405,9 @@ export default function Landing() {
               id='how-it-works'
               aria-labelledby='how-heading'
             >
-              <div className={styles.landing__sectionInner}>
+              <div
+                className={`${styles.landing__sectionInner} ${styles.landing__sectionInnerCentered}`}
+              >
                 <h2 className={styles.landing__sectionTitle} id='how-heading'>
                   How it works
                 </h2>
@@ -366,68 +416,39 @@ export default function Landing() {
                   person.
                 </p>
                 <ol className={styles.landing__steps}>
-                  <li className={styles.landing__step}>
-                    <span className={styles.landing__stepIcon} aria-hidden>
-                      <PenSquare size={18} />
-                    </span>
-                    <div>
-                      <h3 className={styles.landing__stepTitle}>
-                        Ask with context
-                      </h3>
-                      <p className={styles.landing__stepText}>
-                        Title, environment, errors, and what you tried, so peers
-                        reproduce before they teach.
-                      </p>
-                    </div>
-                  </li>
-                  <li className={styles.landing__step}>
-                    <span className={styles.landing__stepIcon} aria-hidden>
-                      <MessageSquare size={18} />
-                    </span>
-                    <div>
-                      <h3 className={styles.landing__stepTitle}>Get answers</h3>
-                      <p className={styles.landing__stepText}>
-                        Replies live in one thread with markdown and code
-                        blocks, visible to everyone in the cohort.
-                      </p>
-                    </div>
-                  </li>
-                  <li className={styles.landing__step}>
-                    <span className={styles.landing__stepIcon} aria-hidden>
-                      <Search size={18} />
-                    </span>
-                    <div>
-                      <h3 className={styles.landing__stepTitle}>
-                        Search two ways
-                      </h3>
-                      <p className={styles.landing__stepText}>
-                        Classic text search on the feed, or semantic search when
-                        you want “questions like this one.”
-                      </p>
-                    </div>
-                  </li>
-                  <li className={styles.landing__step}>
-                    <span className={styles.landing__stepIcon} aria-hidden>
-                      <Library size={18} />
-                    </span>
-                    <div>
-                      <h3 className={styles.landing__stepTitle}>
-                        Own your trail
-                      </h3>
-                      <p className={styles.landing__stepText}>
-                        Your topics list keeps authorship clear. The Knowledge
-                        base hosts uploads and RAG retrieval so answers can cite
-                        your materials. See <strong>Course RAG</strong> above
-                        for the full pipeline.
-                      </p>
-                    </div>
-                  </li>
+                  {processSteps.map((step, index) => {
+                    const Icon = step.icon;
+                    return (
+                      <Motion.li
+                        key={step.title}
+                        className={styles.landing__step}
+                        {...fadeUp}
+                        transition={{
+                          ...fadeUp.transition,
+                          delay: index * 0.08,
+                        }}
+                      >
+                        <span className={styles.landing__stepIcon} aria-hidden>
+                          <Icon size={18} />
+                        </span>
+                        <div>
+                          <h3 className={styles.landing__stepTitle}>
+                            {step.title}
+                          </h3>
+                          <p className={styles.landing__stepText}>{step.text}</p>
+                        </div>
+                      </Motion.li>
+                    );
+                  })}
                 </ol>
               </div>
             </section>
 
             <section className={styles.landing__cta}>
-              <div className={styles.landing__ctaInner}>
+              <Motion.div
+                className={styles.landing__ctaInner}
+                {...fadeUp}
+              >
                 <h2 className={styles.landing__ctaTitle}>Ready when you are</h2>
                 <p className={styles.landing__ctaText}>
                   Create a free learner account to post, reply, and search the
@@ -436,12 +457,12 @@ export default function Landing() {
                 <button
                   type='button'
                   className={styles.landing__btnPrimary}
-                  onClick={() => navigate('/auth')}
+                  onClick={() => goToAuth('register')}
                 >
                   Create free account
                   <ArrowRight size={16} aria-hidden />
                 </button>
-              </div>
+              </Motion.div>
             </section>
           </>
         )}
@@ -464,7 +485,7 @@ export default function Landing() {
                 className={styles.landing__btnPrimary}
                 onClick={() => navigate('/dashboard')}
               >
-                Open forum home
+                Go to Dashboard
                 <ArrowRight size={16} aria-hidden />
               </button>
             </div>
@@ -481,16 +502,20 @@ export default function Landing() {
             </p>
           </div>
           <div className={styles.landing__footerLinks}>
-            <button
-              type='button'
-              className={styles.landing__footerLink}
-              onClick={() => navigate('/auth')}
-            >
-              Sign in
-            </button>
-            <span className={styles.landing__footerDot} aria-hidden>
-              ·
-            </span>
+            {!isAuthenticated && (
+              <>
+                <button
+                  type='button'
+                  className={styles.landing__footerLink}
+                  onClick={() => goToAuth('login')}
+                >
+                  Sign in
+                </button>
+                <span className={styles.landing__footerDot} aria-hidden>
+                  ·
+                </span>
+              </>
+            )}
             <a href='#' className={styles.landing__footerLinkAnchor}>
               Privacy
             </a>
