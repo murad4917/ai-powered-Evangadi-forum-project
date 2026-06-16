@@ -21,8 +21,7 @@ export const createQuestionValidation = [
 // same body rules as posting a question-AI coach only reads draft text
 export const generateQuestionDraftCoachValidation = [
   body("title")
-    .notEmpty()
-    .withMessage("Question title is required")
+    .optional() // <--- Changed from .notEmpty() to match the "optional" spec
     .isString()
     .withMessage("Question title must be a string")
     .isLength({ min: 5, max: 255 })
