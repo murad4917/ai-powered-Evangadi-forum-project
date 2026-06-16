@@ -24,6 +24,7 @@ export default function Dashboard() {
     () => new URLSearchParams(location.search),
     [location.search],
   );
+  
   const searchQuery = queryParams.get("q") || queryParams.get("semantic") || "";
   const searchMode = queryParams.get("semantic")
     ? "AI semantic"
