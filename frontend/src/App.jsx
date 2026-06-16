@@ -12,7 +12,7 @@ import Auth from './pages/Auth/Auth';
 import Dashboard from './pages/Dashboard/Dashboard';
 import MyQuestions from './pages/MyQuestions/MyQuestions';
 import Landing from './pages/Landing/Landing';
-import MyQuestions from './pages/MyQuestions/MyQuestions';
+// import MyQuestions from './pages/MyQuestions/MyQuestions';
 import PostQuestion from './pages/PostQuestion/PostQuestion';
 import QuestionDetail from './pages/QuestionDetail/QuestionDetail';
 import RagDocuments from './pages/RagDocuments/RagDocuments';
