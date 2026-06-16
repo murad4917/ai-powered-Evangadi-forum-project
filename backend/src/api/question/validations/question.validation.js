@@ -18,18 +18,25 @@ export const createQuestionValidation = [
 
   validationErrorHandler,
 ];
+// same body rules as posting a question-AI coach only reads draft text
 export const generateQuestionDraftCoachValidation = [
   body("title")
-    .optional()
-    .isLength({ max: 200 })
-    .withMessage("Title cannot exceed 200 characters"),
+    .notEmpty()
+    .withMessage("Question title is required")
+    .isString()
+    .withMessage("Question title must be a string")
+    .isLength({ min: 5, max: 255 })
+    .withMessage("Question titles must be between 5 and 255 characters")
+    .trim(),
 
   body("content")
     .notEmpty()
-    .withMessage("Content is required")
-    .isLength({ max: 5000 })
-    .withMessage("Content cannot exceed 5000 characters"),
-
+    .withMessage("Question content is required")
+    .isString()
+    .withMessage("Question content must be a string")
+    .isLength({ min: 10 })
+    .withMessage("Question content must be at least 10 characters")
+    .trim(),
   validationErrorHandler,
 ];
 export const assessAnswerAgainstQuestionValidation = [
