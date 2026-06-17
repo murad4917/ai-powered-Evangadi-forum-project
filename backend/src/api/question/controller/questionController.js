@@ -32,7 +32,10 @@ export const createQuestionController = async (req, res, next) => {
 export const getSingleQuestionController = async (req, res, next) => {
   try {
     const { questionHash } = req.params;
-    const result = await getSingleQuestionService({ questionHash });
+    
+    const result = await getSingleQuestionService({
+      questionHash,
+    });
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Question fetched successfully.",
@@ -42,6 +45,20 @@ export const getSingleQuestionController = async (req, res, next) => {
     next(error);
   }
 };
+
+// export const getSingleQuestionController = async (req, res, next) => {
+//   try {
+//     const { questionHash } = req.params;
+//     const result = await getSingleQuestionService({ questionHash });
+//     res.status(StatusCodes.OK).json({
+//       success: true,
+//       message: "Question fetched successfully.",
+//       ...result,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 // Handles AI coaching for a question draft (title+body).
 export const generateQuestionDraftCoachController = async (req, res, next) => {
   try {
