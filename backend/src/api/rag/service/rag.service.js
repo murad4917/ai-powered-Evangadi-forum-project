@@ -287,3 +287,161 @@ export async function createDocumentFromUploadService({
 
   return mapDocumentToResponse(readyDocument);
 }
+
+
+/**
+ * ======================================================
+ * T-23: Safe embedding parser
+ * Handles:
+ * - JSON string from DB
+ * - Already-parsed array
+ * ======================================================
+ */
+function parseEmbedding(embedding) {
+  if (!embedding) return [];
+
+  if (typeof embedding === "string") {
+    try {
+      return JSON.parse(embedding);
+    } catch (error) {
+      // Prevent crash if DB has corrupted data
+      return [];
+    }
+  }
+
+  return embedding;
+}
+
+/**
+ * ======================================================
+ * T-23: Cosine Similarity Function
+ * Measures similarity between query and chunk vectors
+ * ======================================================
+ */
+function cosineSimilarity(vecA, vecB) {
+  if (!vecA || !vecB || vecA.length !== vecB.length) {
+    return 0;
+  }
+
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < vecA.length; i++) {
+    dot += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+
+  return denom === 0 ? 0 : dot / denom;
+}
+
+/**
+ * ======================================================
+ * T-23: Fetch all chunk embeddings for a document
+ * ======================================================
+ */
+async function fetchDocumentChunksWithVectors(documentId) {
+  const sql = `
+    SELECT
+      dc.chunk_id,
+      dc.chunk_index,
+      dc.content,
+      dcv.embedding
+    FROM document_chunks dc
+    INNER JOIN document_chunk_vectors dcv
+      ON dc.chunk_id = dcv.chunk_id
+    WHERE dc.document_id = ?
+  `;
+
+  return await safeExecute(sql, [documentId]);
+}
+
+/**
+ * ======================================================
+ * T-23: Semantic Search Service
+ * Flow:
+ * 1. Verify document exists
+ * 2. Check ownership
+ * 3. Ensure document is ready
+ * 4. Generate query embedding (Gemini)
+ * 5. Fetch stored embeddings
+ * 6. Compute similarity
+ * 7. Rank results
+ * 8. Return top K
+ * ======================================================
+ */
+export async function searchInDocumentService({
+  documentId,
+  query,
+  k = 5,
+  userId,
+}) {
+  /**
+   * T-23: Step 1 - Fetch document
+   */
+  const document = await fetchDocumentById(documentId);
+
+  if (!document) {
+    throw new BadRequestError("Document not found.");
+  }
+
+  /**
+   * T-23: Step 2 - Verify ownership
+   */
+  if (document.user_id !== userId) {
+    throw new BadRequestError("You do not have access to this document.");
+  }
+
+  /**
+   * T-23: Step 3 - Check processing status
+   */
+  if (document.status !== "ready") {
+    throw new BadRequestError("Document is not ready for searching.");
+  }
+
+  /**
+   * T-23: Step 4 - Generate query embedding
+   */
+  const { embedding: queryEmbedding } =
+    await generateQuestionEmbedding(query, {
+      taskType: "RETRIEVAL_QUERY",
+    });
+
+  /**
+   * T-23: Step 5 - Load stored chunk vectors
+   */
+  const chunks = await fetchDocumentChunksWithVectors(documentId);
+
+  /**
+   * T-23: Step 6 - Compute similarity scores
+   */
+  const rankedResults = chunks.map((chunk) => {
+    const embedding = parseEmbedding(chunk.embedding);
+
+    return {
+      chunkId: chunk.chunk_id,
+      chunkIndex: chunk.chunk_index,
+      excerpt: chunk.content,
+
+      score: cosineSimilarity(queryEmbedding, embedding),
+    };
+  });
+
+  /**
+   * T-23: Step 7 - Sort by highest relevance
+   */
+  rankedResults.sort((a, b) => b.score - a.score);
+
+  /**
+   * T-23: Step 8 - Return top K results
+   */
+  const topResults = rankedResults.slice(0, k);
+
+  return {
+    query,
+    results: topResults,
+  };
+}
