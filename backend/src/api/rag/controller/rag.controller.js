@@ -3,8 +3,10 @@ import { persistMemoryUpload } from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
 import { BadRequestError } from "../../../utils/errors/index.js";
 import { createDocumentFromUploadService } from "../service/rag.service.js";
-import { searchInDocumentService } from "../service/rag.service.js";
-
+import {
+  searchInDocumentService,
+  listDocumentsForUserService,
+} from "../service/rag.service.js";
 
 /**
  * Handles POST /api/rag/documents — delegates upload processing to the service layer.
@@ -83,7 +85,27 @@ export const searchInDocumentController = async (req, res, next) => {
       message: "Ranked chunk excerpts",
       data,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+/**
+ * ======================================================
+ * T-24: List User RAG Documents Controller
+ * Endpoint: GET /api/rag/documents
+ * ======================================================
+ */
+export const listDocumentsController = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
 
+    const documents = await listDocumentsForUserService(userId);
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Documents fetched successfully.",
+      data: documents,
+    });
   } catch (error) {
     next(error);
   }

@@ -126,7 +126,11 @@ async function fetchDocumentById(documentId) {
   return rows[0] ?? null;
 }
 
-async function updateDocumentStatus({ documentId, status, errorMessage = null }) {
+async function updateDocumentStatus({
+  documentId,
+  status,
+  errorMessage = null,
+}) {
   const sql = `
     UPDATE documents
     SET status = ?, error_message = ?
@@ -237,7 +241,6 @@ async function markDocumentFailed(documentId, error) {
   });
 }
 
-
 export async function createDocumentFromUploadService({
   userId,
   file,
@@ -287,7 +290,6 @@ export async function createDocumentFromUploadService({
 
   return mapDocumentToResponse(readyDocument);
 }
-
 
 /**
  * ======================================================
@@ -405,10 +407,9 @@ export async function searchInDocumentService({
   /**
    * T-23: Step 4 - Generate query embedding
    */
-  const { embedding: queryEmbedding } =
-    await generateQuestionEmbedding(query, {
-      taskType: "RETRIEVAL_QUERY",
-    });
+  const { embedding: queryEmbedding } = await generateQuestionEmbedding(query, {
+    taskType: "RETRIEVAL_QUERY",
+  });
 
   /**
    * T-23: Step 5 - Load stored chunk vectors
@@ -444,4 +445,34 @@ export async function searchInDocumentService({
     query,
     results: topResults,
   };
+} /**
+ * ======================================================
+ * T-24: List User RAG Documents Service
+ * Queries the documents table for a specific user,
+ * ordered by latest upload, and maps the output.
+ * ======================================================
+ */
+export async function listDocumentsForUserService(userId) {
+  const sql = `
+    SELECT 
+      document_id,
+      user_id,
+      title,
+      mime_type,
+      storage_path,
+      byte_size,
+      status,
+      error_message,
+      created_at,
+      updated_at
+    FROM documents
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+  `;
+
+  // Query database using your established safeExecute utility
+  const rows = await safeExecute(sql, [userId]);
+
+  // Map and return data using your file's local mapDocumentToResponse function
+  return rows.map((row) => mapDocumentToResponse(row));
 }

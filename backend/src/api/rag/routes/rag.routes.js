@@ -5,10 +5,8 @@ import {
   handlePdfUpload,
 } from "../../../middleware/rag.upload.js";
 import { createDocumentController } from "../controller/rag.controller.js";
-import {
-  searchInDocumentController
-} from "../controller/rag.controller.js";
-
+import { searchInDocumentController } from "../controller/rag.controller.js";
+import { listDocumentsController } from "../controller/rag.controller.js";
 const router = express.Router();
 
 /**
@@ -25,15 +23,20 @@ router.post(
 
 router.use(createDocumentMulterErrorHandler);
 
-export default router;
 /**
  *  T-23: Semantic Search Route
  * GET /api/rag/documents/:documentId/search
  */
 
-
 router.get(
   "/documents/:documentId/search",
   authenticateUser,
-  searchInDocumentController
+  searchInDocumentController,
 );
+/**
+ * T-24: List RAG Documents Route
+ * GET /api/rag/documents
+ */
+router.get("/documents", authenticateUser, listDocumentsController);
+
+export default router;
