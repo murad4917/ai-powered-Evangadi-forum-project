@@ -18,18 +18,24 @@ export const createQuestionValidation = [
 
   validationErrorHandler,
 ];
+// same body rules as posting a question-AI coach only reads draft text
 export const generateQuestionDraftCoachValidation = [
   body("title")
-    .optional()
-    .isLength({ max: 200 })
-    .withMessage("Title cannot exceed 200 characters"),
+    .optional() // <--- Changed from .notEmpty() to match the "optional" spec
+    .isString()
+    .withMessage("Question title must be a string")
+    .isLength({ min: 5, max: 255 })
+    .withMessage("Question titles must be between 5 and 255 characters")
+    .trim(),
 
   body("content")
     .notEmpty()
-    .withMessage("Content is required")
-    .isLength({ max: 5000 })
-    .withMessage("Content cannot exceed 5000 characters"),
-
+    .withMessage("Question content is required")
+    .isString()
+    .withMessage("Question content must be a string")
+    .isLength({ min: 10 })
+    .withMessage("Question content must be at least 10 characters")
+    .trim(),
   validationErrorHandler,
 ];
 export const assessAnswerAgainstQuestionValidation = [
@@ -71,8 +77,8 @@ export const getSingleQuestionValidation = [
   param("questionHash")
     .isString()
     .withMessage("Question hash must be a string")
-    .matches(/^[a-f0-9]{32}$/)
-    .withMessage("Question hash must be a 32-character lowercase hex string")
+    .matches(/^[a-f0-9]{16}$/)
+    .withMessage("Question hash must be a 16-character lowercase hex string")
     .trim(),
   validationErrorHandler,
 ];

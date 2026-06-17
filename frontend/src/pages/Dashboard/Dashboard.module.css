@@ -44,9 +44,8 @@
 /* ─── Quick Navigation Rows Deck ─────────────────────────────────────── */
 .quickActionsGrid {
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(3, 1fr);
-  margin-bottom: 2rem;
+  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
 }
 
 .quickActionCard {
@@ -138,11 +137,10 @@
 /* ─── Discussion Layout Panels ──────────────────────────────────────── */
 .feed__header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: var(--spacing-md);
   align-items: center;
-  border-bottom: 1px solid #f3f4f6;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.5rem;
 }
 
 .feed__headerLeft h3 {

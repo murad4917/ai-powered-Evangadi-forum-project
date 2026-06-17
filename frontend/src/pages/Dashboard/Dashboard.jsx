@@ -230,6 +230,7 @@ export default function Dashboard() {
           </div>
           <span className={styles.feed__badge}>Newest Threads</span>
         </div>
+      </section>
 
         <div className={styles.feedContentPanel}>
           {isLoading && (
@@ -328,6 +329,10 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+      </section>
+
+      <section className={styles.listPanel} aria-live="polite">
+        {renderContent()}
       </section>
     </div>
   );
