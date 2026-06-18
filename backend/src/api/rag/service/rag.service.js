@@ -1,12 +1,21 @@
 import fs from "fs/promises";
+<<<<<<< Updated upstream
 import path from "path";
 import { unlink } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
 import { safeExecute } from "../../../../db/config.js";
 import { BadRequestError, ServiceUnavailableError, NotFoundError} from "../../../utils/errors/index.js";
+=======
+import { unlink } from "node:fs/promises";
+import path from "path";
+import { PDFParse } from "pdf-parse";
+import { safeExecute } from "../../../../db/config.js";
+import { BadRequestError, ServiceUnavailableError, NotFoundError } from "../../../utils/errors/index.js";
+>>>>>>> Stashed changes
 import { generateQuestionEmbedding } from "../../question/service/vector.service.js";
 import { RAG_UPLOADS_ROOT } from "../../../middleware/rag.upload.js";
 import { GoogleGenAI } from "@google/genai";
+import { RAG_UPLOADS_ROOT } from "../../../middleware/rag.upload.js";
 
 
 
@@ -150,6 +159,21 @@ function resolveOwnedDocumentPath(storagePath) {
   return absolutePath;
 }
 
+<<<<<<< Updated upstream
+=======
+export async function assertOwnedDocument({ documentId, userId }) {
+  const document = await fetchDocumentById(documentId);
+
+  // Check if document exists and belongs to the user
+  if (!document || document.user_id !== userId) {
+    throw new NotFoundError("Document not found");
+  }
+
+  return document;
+}
+
+
+>>>>>>> Stashed changes
 async function updateDocumentStatus({ documentId, status, errorMessage = null }) {
   const sql = `
     UPDATE documents
@@ -345,7 +369,10 @@ export async function deleteDocumentService({ userId, documentId }) {
 
   return { id: documentId };
 }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 
 /**
  * ======================================================

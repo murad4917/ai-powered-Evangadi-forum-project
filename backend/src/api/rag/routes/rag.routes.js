@@ -13,9 +13,14 @@ import {
   createDocumentController,
   deleteDocumentController,
   queryDocumentController,
+<<<<<<< Updated upstream
  } from "../controller/rag.controller.js";
 import {
   searchInDocumentController
+=======
+  getDocumentMetaController,
+  deleteDocumentController,
+>>>>>>> Stashed changes
 } from "../controller/rag.controller.js";
 
 const router = express.Router();
@@ -72,4 +77,18 @@ router.delete(
   deleteDocumentController,
 );
 
+<<<<<<< Updated upstream
 
+=======
+/**
+ * @route DELETE /api/rag/documents/:documentId
+ * @desc Delete one owned RAG document and its stored PDF
+ * @access Protected
+ */
+router.delete(
+  "/documents/:documentId",
+  authenticateUser,
+  documentIdValidation,
+  deleteDocumentController,
+);
+>>>>>>> Stashed changes
