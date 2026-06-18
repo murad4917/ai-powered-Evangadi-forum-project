@@ -2,8 +2,11 @@ import { StatusCodes } from "http-status-codes";
 import { persistMemoryUpload } from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
 import { BadRequestError } from "../../../utils/errors/index.js";
-import { createDocumentFromUploadService } from "../service/rag.service.js";
-import { searchInDocumentService } from "../service/rag.service.js";
+import { 
+  createDocumentFromUploadService,
+  searchInDocumentService, 
+  queryDocumentService 
+} from "../service/rag.service.js";
 
 
 /**
@@ -88,3 +91,22 @@ export const searchInDocumentController = async (req, res, next) => {
     next(error);
   }
 };
+
+export const queryDocumentController = async (req, res, next) => {
+  try {
+    const answerPayload = await queryDocumentService({
+      userId: req.user.id,
+      documentId: req.params.documentId,
+      query: req.body.query,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Answer and citations",
+      data: answerPayload,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
