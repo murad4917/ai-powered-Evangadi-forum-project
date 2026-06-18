@@ -1,5 +1,6 @@
 import express from "express";
 import { authenticateUser } from "../../../middleware/authentication.js";
+import { validationErrorHandler } from "../../../middleware/validation-handler.js";
 import {
   createDocumentMulterErrorHandler,
   handlePdfUpload,
@@ -8,13 +9,12 @@ import {
   documentIdParamValidation,
   queryDocumentValidation,
 } from "../validation/rag.validation.js";
-import { 
+import {
   createDocumentController,
   queryDocumentController,
- } from "../controller/rag.controller.js";
-import {
-  searchInDocumentController
+  getDocumentMetaController,
 } from "../controller/rag.controller.js";
+import { searchInDocumentController } from "../controller/rag.controller.js";
 
 const router = express.Router();
 
@@ -38,11 +38,10 @@ export default router;
  * GET /api/rag/documents/:documentId/search
  */
 
-
 router.get(
   "/documents/:documentId/search",
   authenticateUser,
-  searchInDocumentController
+  searchInDocumentController,
 );
 
 /**
@@ -56,5 +55,10 @@ router.post(
   queryDocumentValidation,
   queryDocumentController,
 );
-
-
+router.get(
+  "/documents/:documentId",
+  authenticateUser,
+  documentIdParamValidation,
+  validationErrorHandler,
+  getDocumentMetaController,
+);

@@ -561,3 +561,39 @@ export async function queryDocumentService({ userId, documentId, query }) {
     chunksUsed: chunks.map(chunk => chunk.chunkId),
   };
 }
+
+/**
+ * Get metadata for a single document, but only if it belongs to this user.
+ *
+ * @param {number} documentId
+ * @param {number} userId
+ * @returns {Promise<object>} the document record
+ */
+export const getDocumentMetaService = async (documentId, userId) => {
+  const rows = await safeExecute(
+    `SELECT document_id, title, mime_type, byte_size, status, error_message,
+            created_at, updated_at, user_id, storage_path
+     FROM documents
+     WHERE document_id = ? AND user_id = ?`,
+    [documentId, userId],
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Document not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const doc = rows[0];
+
+  return {
+    document_id: doc.document_id,
+    title: doc.title,
+    mime_type: doc.mime_type,
+    byte_size: doc.byte_size,
+    status: doc.status,
+    error_message: doc.error_message,
+    created_at: doc.created_at,
+    updated_at: doc.updated_at,
+  };
+};
