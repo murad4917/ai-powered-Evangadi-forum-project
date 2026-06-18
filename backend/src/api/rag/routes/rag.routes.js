@@ -4,7 +4,14 @@ import {
   createDocumentMulterErrorHandler,
   handlePdfUpload,
 } from "../../../middleware/rag.upload.js";
-import { createDocumentController } from "../controller/rag.controller.js";
+import {
+  documentIdParamValidation,
+  queryDocumentValidation,
+} from "../validation/rag.validation.js";
+import { 
+  createDocumentController,
+  queryDocumentController,
+ } from "../controller/rag.controller.js";
 import {
   searchInDocumentController
 } from "../controller/rag.controller.js";
@@ -37,3 +44,17 @@ router.get(
   authenticateUser,
   searchInDocumentController
 );
+
+/**
+ * @route POST /api/rag/documents/:documentId/query
+ * @desc Generate an AI answer grounded in the most relevant chunks of one document
+ * @access Protected
+ */
+router.post(
+  "/documents/:documentId/query",
+  authenticateUser,
+  queryDocumentValidation,
+  queryDocumentController,
+);
+
+

@@ -1,8 +1,16 @@
 import fs from "fs/promises";
 import { PDFParse } from "pdf-parse";
 import { safeExecute } from "../../../../db/config.js";
-import { BadRequestError } from "../../../utils/errors/index.js";
+import { BadRequestError, ServiceUnavailableError} from "../../../utils/errors/index.js";
 import { generateQuestionEmbedding } from "../../question/service/vector.service.js";
+import { GoogleGenAI } from "@google/genai";
+
+
+
+const RAG_SEARCH_K = 5;
+const GEMINI_GENERATION_MODEL = process.env.GEMINI_GENERATION_MODEL || "gemini-2.0-flash";
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 
 function mapDocumentToResponse(row) {
   return {
@@ -373,6 +381,55 @@ async function fetchDocumentChunksWithVectors(documentId) {
  * 8. Return top K
  * ======================================================
  */
+
+function getGeneratedText(response) {
+  // In @google/genai `response.text` is a getter that may throw when the
+  // response contains no usable candidates (e.g. safety block). Wrap it so we
+  // can always fall through to the manual candidates parse as a safe fallback.
+  try {
+    const txt = response.text;
+    if (typeof txt === "string" && txt.trim()) {
+      return txt.trim();
+    }
+  } catch {
+    // getter threw — fall through to manual parse below
+  }
+
+  const parts = response.candidates?.[0]?.content?.parts || [];
+  return parts
+    .map(part => part.text || "")
+    .join("")
+    .trim();
+}
+
+function buildRagPrompt({ query, chunks }) {
+  const context = chunks
+    .map(
+      (chunk, index) =>
+        `[${index + 1}] chunkIndex=${chunk.chunkIndex}\n${chunk.content}`,
+    )
+    .join("\n\n---\n\n");
+
+  return `
+You are a helpful AI assistant answering a user's question based strictly on the provided PDF excerpts.
+
+CRITICAL INSTRUCTIONS:
+1. First, analyze the user's question and determine if the provided excerpts contain the actual answer or substantive information about the topic.
+2. If the excerpts only contain a passing mention of the keyword but do NOT actually answer the question (for example, if the user asks "What is Java?" and the text only says "He used Java"), you MUST reply EXACTLY with: "I could not find this info in the pdf please ask only from pdf."
+3. If the context is completely insufficient or unrelated to the excerpts, you MUST reply EXACTLY with: "I could not find this info in the pdf please ask only from pdf."
+4. If the excerpts DO contain the answer, provide a concise and practical response.
+5. Always cite the relevant excerpts using bracket references like [1].
+6. Do NOT invent facts, links, page numbers, or any details outside the excerpts.
+
+User's Question:
+${query}
+
+Context Excerpts:
+${context}
+`.trim();
+}
+
+
 export async function searchInDocumentService({
   documentId,
   query,
@@ -443,5 +500,64 @@ export async function searchInDocumentService({
   return {
     query,
     results: topResults,
+  };
+}
+
+export async function answerFromRagChunksService({ query, chunks }) {
+  if (chunks.length === 0) {
+    return "I do not have enough information in this document to answer that question.";
+  }
+
+  const prompt = buildRagPrompt({ query, chunks });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: GEMINI_GENERATION_MODEL,
+      contents: prompt,
+    });
+
+    const answer = getGeneratedText(response);
+
+    if (!answer) {
+      throw new Error("Gemini response did not include answer text.");
+    }
+
+    return answer;
+  } catch (error) {
+    // Log the actual Gemini / network error so it is visible in server logs.
+    // Common causes: quota exhaustion (429), wrong model name, network timeout.
+    console.error(
+      `[RAG] answerFromRagChunksService failed (model=${GEMINI_GENERATION_MODEL}):`,
+      error?.message ?? error,
+    );
+    throw new ServiceUnavailableError(
+      "Failed to generate an answer from the document. Please try again later.",
+    );
+  }
+}
+
+
+
+export async function queryDocumentService({ userId, documentId, query }) {
+  // Retrieval first: find the chunks most semantically similar to the user's
+  // question, then pass only those chunks to generation. This is the core RAG
+  // pattern and keeps the answer grounded in a small, auditable context window.
+  const searchResult = await searchInDocumentService({
+    userId,
+    documentId,
+    query,
+    k: RAG_SEARCH_K,
+  });
+
+  const chunks = searchResult.results;
+  const answer = await answerFromRagChunksService({ query, chunks });
+
+  return {
+    answer,
+    citations: chunks.map((chunk, index) => ({
+      ref: index + 1,
+      chunkIndex: chunk.chunkIndex,
+    })),
+    chunksUsed: chunks.map(chunk => chunk.chunkId),
   };
 }
