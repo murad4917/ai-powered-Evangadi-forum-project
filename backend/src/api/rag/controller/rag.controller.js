@@ -2,12 +2,12 @@ import { StatusCodes } from "http-status-codes";
 import { persistMemoryUpload } from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
 import { BadRequestError } from "../../../utils/errors/index.js";
-import { 
+import {
   createDocumentFromUploadService,
-  searchInDocumentService, 
-  queryDocumentService 
+  deleteDocumentService,
+  searchInDocumentService,
+  queryDocumentService,
 } from "../service/rag.service.js";
-
 
 /**
  * Handles POST /api/rag/documents — delegates upload processing to the service layer.
@@ -32,6 +32,27 @@ export const createDocumentController = async (req, res, next) => {
       success: true,
       message: "Document uploaded and processed.",
       data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// # Task: Delete RAG Document
+
+// **Endpoint**: `DELETE /api/rag/documents/:documentId`
+
+export const deleteDocumentController = async (req, res, next) => {
+  try {
+    const deletedDocument = await deleteDocumentService({
+      userId: req.user.id,
+      documentId: req.params.documentId,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Document deleted successfully.",
+      data: deletedDocument,
     });
   } catch (error) {
     next(error);
@@ -86,7 +107,6 @@ export const searchInDocumentController = async (req, res, next) => {
       message: "Ranked chunk excerpts",
       data,
     });
-
   } catch (error) {
     next(error);
   }
@@ -109,4 +129,3 @@ export const queryDocumentController = async (req, res, next) => {
     next(error);
   }
 };
-

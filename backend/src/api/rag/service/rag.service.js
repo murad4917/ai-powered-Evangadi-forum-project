@@ -1,8 +1,11 @@
 import fs from "fs/promises";
+import path from "path";
+import { unlink } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
 import { safeExecute } from "../../../../db/config.js";
-import { BadRequestError, ServiceUnavailableError} from "../../../utils/errors/index.js";
+import { BadRequestError, ServiceUnavailableError, NotFoundError} from "../../../utils/errors/index.js";
 import { generateQuestionEmbedding } from "../../question/service/vector.service.js";
+import { RAG_UPLOADS_ROOT } from "../../../middleware/rag.upload.js";
 import { GoogleGenAI } from "@google/genai";
 
 
@@ -134,6 +137,19 @@ async function fetchDocumentById(documentId) {
   return rows[0] ?? null;
 }
 
+function resolveOwnedDocumentPath(storagePath) {
+  const absolutePath = path.resolve(RAG_UPLOADS_ROOT, storagePath);
+
+  if (
+    absolutePath !== RAG_UPLOADS_ROOT &&
+    !absolutePath.startsWith(`${RAG_UPLOADS_ROOT}${path.sep}`)
+  ) {
+    throw new BadRequestError("Invalid document storage path.");
+  }
+
+  return absolutePath;
+}
+
 async function updateDocumentStatus({ documentId, status, errorMessage = null }) {
   const sql = `
     UPDATE documents
@@ -142,6 +158,17 @@ async function updateDocumentStatus({ documentId, status, errorMessage = null })
   `;
 
   await safeExecute(sql, [status, errorMessage, documentId]);
+}
+
+export async function assertOwnedDocument({ documentId, userId }) {
+  const document = await fetchDocumentById(documentId);
+
+  // Check if document exists and belongs to the user
+  if (!document || document.user_id !== userId) {
+    throw new NotFoundError("Document not found");
+  }
+
+  return document;
 }
 
 async function deleteDocumentChunksByDocumentId(documentId) {
@@ -294,6 +321,29 @@ export async function createDocumentFromUploadService({
   }
 
   return mapDocumentToResponse(readyDocument);
+}
+
+export async function deleteDocumentService({ userId, documentId }) {
+  const document = await assertOwnedDocument({ documentId, userId });
+  const absolutePath = resolveOwnedDocumentPath(document.storage_path);
+
+  try {
+    await unlink(absolutePath);
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  await safeExecute(
+    `
+      DELETE FROM documents
+      WHERE document_id = ? AND user_id = ?
+    `,
+    [documentId, userId],
+  );
+
+  return { id: documentId };
 }
 
 

@@ -6,10 +6,12 @@ import {
 } from "../../../middleware/rag.upload.js";
 import {
   documentIdParamValidation,
+  documentIdValidation,
   queryDocumentValidation,
 } from "../validation/rag.validation.js";
 import { 
   createDocumentController,
+  deleteDocumentController,
   queryDocumentController,
  } from "../controller/rag.controller.js";
 import {
@@ -55,6 +57,19 @@ router.post(
   authenticateUser,
   queryDocumentValidation,
   queryDocumentController,
+);
+
+
+/**
+ * @route DELETE /api/rag/documents/:documentId
+ * @desc Delete one owned RAG document and its stored PDF
+ * @access Protected
+ */
+router.delete(
+  "/documents/:documentId",
+  authenticateUser,
+  documentIdValidation,
+  deleteDocumentController,
 );
 
 
