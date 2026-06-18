@@ -1,21 +1,12 @@
 import fs from "fs/promises";
-<<<<<<< Updated upstream
 import path from "path";
 import { unlink } from "node:fs/promises";
-import { PDFParse } from "pdf-parse";
-import { safeExecute } from "../../../../db/config.js";
-import { BadRequestError, ServiceUnavailableError, NotFoundError} from "../../../utils/errors/index.js";
-=======
-import { unlink } from "node:fs/promises";
-import path from "path";
 import { PDFParse } from "pdf-parse";
 import { safeExecute } from "../../../../db/config.js";
 import { BadRequestError, ServiceUnavailableError, NotFoundError } from "../../../utils/errors/index.js";
->>>>>>> Stashed changes
 import { generateQuestionEmbedding } from "../../question/service/vector.service.js";
 import { RAG_UPLOADS_ROOT } from "../../../middleware/rag.upload.js";
 import { GoogleGenAI } from "@google/genai";
-import { RAG_UPLOADS_ROOT } from "../../../middleware/rag.upload.js";
 
 
 
@@ -159,21 +150,7 @@ function resolveOwnedDocumentPath(storagePath) {
   return absolutePath;
 }
 
-<<<<<<< Updated upstream
-=======
-export async function assertOwnedDocument({ documentId, userId }) {
-  const document = await fetchDocumentById(documentId);
 
-  // Check if document exists and belongs to the user
-  if (!document || document.user_id !== userId) {
-    throw new NotFoundError("Document not found");
-  }
-
-  return document;
-}
-
-
->>>>>>> Stashed changes
 async function updateDocumentStatus({ documentId, status, errorMessage = null }) {
   const sql = `
     UPDATE documents
@@ -369,10 +346,7 @@ export async function deleteDocumentService({ userId, documentId }) {
 
   return { id: documentId };
 }
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
 
 /**
  * ======================================================
@@ -638,3 +612,39 @@ export async function queryDocumentService({ userId, documentId, query }) {
     chunksUsed: chunks.map(chunk => chunk.chunkId),
   };
 }
+
+/**
+ * Get metadata for a single document, but only if it belongs to this user.
+ *
+ * @param {number} documentId
+ * @param {number} userId
+ * @returns {Promise<object>} the document record
+ */
+export const getDocumentMetaService = async (documentId, userId) => {
+  const rows = await safeExecute(
+    `SELECT document_id, title, mime_type, byte_size, status, error_message,
+            created_at, updated_at, user_id, storage_path
+     FROM documents
+     WHERE document_id = ? AND user_id = ?`,
+    [documentId, userId],
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Document not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const doc = rows[0];
+
+  return {
+    document_id: doc.document_id,
+    title: doc.title,
+    mime_type: doc.mime_type,
+    byte_size: doc.byte_size,
+    status: doc.status,
+    error_message: doc.error_message,
+    created_at: doc.created_at,
+    updated_at: doc.updated_at,
+  };
+};
