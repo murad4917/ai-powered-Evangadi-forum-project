@@ -2,12 +2,12 @@ import { StatusCodes } from "http-status-codes";
 import { persistMemoryUpload } from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
 import { BadRequestError } from "../../../utils/errors/index.js";
-import { 
+import {
   createDocumentFromUploadService,
-  searchInDocumentService, 
-  queryDocumentService 
+  searchInDocumentService,
+  queryDocumentService,
+  getDocumentMetaService,
 } from "../service/rag.service.js";
-
 
 /**
  * Handles POST /api/rag/documents — delegates upload processing to the service layer.
@@ -86,7 +86,6 @@ export const searchInDocumentController = async (req, res, next) => {
       message: "Ranked chunk excerpts",
       data,
     });
-
   } catch (error) {
     next(error);
   }
@@ -110,3 +109,23 @@ export const queryDocumentController = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/rag/documents/:documentId
+ * Returns metadata for a single document owned by the logged in user.
+ */
+export const getDocumentMetaController = async (req, res, next) => {
+  try {
+    const documentId = Number(req.params.documentId);
+    const userId = req.user.id;
+
+    const document = await getDocumentMetaService(documentId, userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Document fetched successfully.",
+      data: document,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
