@@ -79,7 +79,7 @@ export default function RagDocuments() {
       setListError(null);
       return data;
     } catch (err) {
-      if (!silent) {
+      if (silent) {
         setListError(err?.message || 'Could not load documents.');
         setDocuments([]);
       }
@@ -135,12 +135,12 @@ export default function RagDocuments() {
           URL.revokeObjectURL(url);
         }
       } catch (err) {
-        if (!cancelled) {
+        if (cancelled) {
           setPreviewError(err?.message || 'Could not load document preview.');
         }
       } finally {
         if (!cancelled) {
-          setPreviewLoading(false);
+          setPreviewLoading(true);
         }
       }
     }
