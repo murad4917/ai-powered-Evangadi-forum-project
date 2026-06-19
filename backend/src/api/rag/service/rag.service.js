@@ -1,16 +1,18 @@
 import fs from "fs/promises";
 import { PDFParse } from "pdf-parse";
 import { safeExecute } from "../../../../db/config.js";
-import { BadRequestError, ServiceUnavailableError} from "../../../utils/errors/index.js";
+import {
+  BadRequestError,
+  NotFoundError,
+  ServiceUnavailableError,
+} from "../../../utils/errors/index.js";
 import { generateQuestionEmbedding } from "../../question/service/vector.service.js";
 import { GoogleGenAI } from "@google/genai";
 
-
-
 const RAG_SEARCH_K = 5;
-const GEMINI_GENERATION_MODEL = process.env.GEMINI_GENERATION_MODEL || "gemini-2.0-flash";
+const GEMINI_GENERATION_MODEL =
+  process.env.GEMINI_GENERATION_MODEL || "gemini-2.0-flash";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 
 function mapDocumentToResponse(row) {
   return {
@@ -134,7 +136,11 @@ async function fetchDocumentById(documentId) {
   return rows[0] ?? null;
 }
 
-async function updateDocumentStatus({ documentId, status, errorMessage = null }) {
+async function updateDocumentStatus({
+  documentId,
+  status,
+  errorMessage = null,
+}) {
   const sql = `
     UPDATE documents
     SET status = ?, error_message = ?
@@ -245,7 +251,6 @@ async function markDocumentFailed(documentId, error) {
   });
 }
 
-
 export async function createDocumentFromUploadService({
   userId,
   file,
@@ -295,7 +300,6 @@ export async function createDocumentFromUploadService({
 
   return mapDocumentToResponse(readyDocument);
 }
-
 
 /**
  * ======================================================
@@ -397,7 +401,7 @@ function getGeneratedText(response) {
 
   const parts = response.candidates?.[0]?.content?.parts || [];
   return parts
-    .map(part => part.text || "")
+    .map((part) => part.text || "")
     .join("")
     .trim();
 }
@@ -428,7 +432,6 @@ Context Excerpts:
 ${context}
 `.trim();
 }
-
 
 export async function searchInDocumentService({
   documentId,
@@ -462,10 +465,9 @@ export async function searchInDocumentService({
   /**
    * T-23: Step 4 - Generate query embedding
    */
-  const { embedding: queryEmbedding } =
-    await generateQuestionEmbedding(query, {
-      taskType: "RETRIEVAL_QUERY",
-    });
+  const { embedding: queryEmbedding } = await generateQuestionEmbedding(query, {
+    taskType: "RETRIEVAL_QUERY",
+  });
 
   /**
    * T-23: Step 5 - Load stored chunk vectors
@@ -536,8 +538,6 @@ export async function answerFromRagChunksService({ query, chunks }) {
   }
 }
 
-
-
 export async function queryDocumentService({ userId, documentId, query }) {
   // Retrieval first: find the chunks most semantically similar to the user's
   // question, then pass only those chunks to generation. This is the core RAG
@@ -558,7 +558,7 @@ export async function queryDocumentService({ userId, documentId, query }) {
       ref: index + 1,
       chunkIndex: chunk.chunkIndex,
     })),
-    chunksUsed: chunks.map(chunk => chunk.chunkId),
+    chunksUsed: chunks.map((chunk) => chunk.chunkId),
   };
 }
 
@@ -596,4 +596,20 @@ export const getDocumentMetaService = async (documentId, userId) => {
     created_at: doc.created_at,
     updated_at: doc.updated_at,
   };
+};
+
+export const assertOwnedDocument = async (documentId, userId) => {
+  const rows = await safeExecute(
+    `SELECT document_id, title, mime_type, storage_path
+     FROM documents
+     WHERE document_id = ? AND user_id = ?
+     LIMIT 1`,
+    [documentId, userId],
+  );
+
+  if (rows.length === 0) {
+    throw new NotFoundError("Document not found.");
+  }
+
+  return rows[0];
 };

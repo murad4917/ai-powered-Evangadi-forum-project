@@ -1,5 +1,10 @@
+import path from "node:path";
+import fs from "node:fs/promises";
 import { StatusCodes } from "http-status-codes";
-import { persistMemoryUpload } from "../../../middleware/rag.upload.js";
+import {
+  persistMemoryUpload,
+  RAG_UPLOADS_ROOT,
+} from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
 import { BadRequestError } from "../../../utils/errors/index.js";
 import {
@@ -7,6 +12,7 @@ import {
   searchInDocumentService,
   queryDocumentService,
   getDocumentMetaService,
+  assertOwnedDocument,
 } from "../service/rag.service.js";
 
 /**
@@ -125,6 +131,40 @@ export const getDocumentMetaController = async (req, res, next) => {
       message: "Document fetched successfully.",
       data: document,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// T-24: GET /api/rag/documents/:documentId/file
+
+export const getDocumentFileController = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    const documentId = Number(req.params.documentId);
+    if (!userId) {
+      const err = new Error("Unauthorized");
+      err.statusCode = 401;
+      throw err;
+    }
+    // 1. verify ownership + get document
+    const doc = await assertOwnedDocument(documentId, userId);
+    // 2. build absolute path
+    const absPath = path.join(RAG_UPLOADS_ROOT, doc.storage_path);
+    // 3. verify file exists
+    try {
+      await fs.access(absPath);
+    } catch {
+      throw new Error("Document file not found.");
+    }
+    // 4. headers
+    res.setHeader("Content-Type", doc.mime_type || "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(doc.title || "document.pdf")}"`,
+    );
+    // 5. stream file
+    return res.sendFile(absPath);
   } catch (error) {
     next(error);
   }
