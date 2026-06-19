@@ -165,16 +165,31 @@ async function updateDocumentStatus({
 
   await safeExecute(sql, [status, errorMessage, documentId]);
 }
-
-export async function assertOwnedDocument({ documentId, userId }) {
-  const document = await fetchDocumentById(documentId);
-
-  if (!document || document.user_id !== userId) {
-    throw new NotFoundError("Document not found");
+//
+export const assertOwnedDocument = async (documentId, userId) => {
+  const rows = await safeExecute(
+    `SELECT document_id, title, mime_type, storage_path
+     FROM documents
+     WHERE document_id = ? AND user_id = ?
+     LIMIT 1`,
+    [documentId, userId],
+  );
+  if (rows.length === 0) {
+    throw new NotFoundError("Document not found.");
   }
+  return rows[0];
+};
 
-  return document;
-}
+//
+// export async function assertOwnedDocument({ documentId, userId }) {
+//   const document = await fetchDocumentById(documentId);
+
+//   if (!document || document.user_id !== userId) {
+//     throw new NotFoundError("Document not found");
+//   }
+
+//   return document;
+// }
 
 async function deleteDocumentChunksByDocumentId(documentId) {
   const sql = `
