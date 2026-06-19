@@ -65,6 +65,7 @@ router.get(
   getDocumentMetaController,
 );
 
+
 router.get(
   "/documents/:documentId/file",
   authenticateUser,
