@@ -7,11 +7,6 @@ import {
   deleteDocumentService,
   searchInDocumentService,
   queryDocumentService,
-<<<<<<< Updated upstream
-=======
-  getDocumentMetaService,
-  deleteDocumentService,
->>>>>>> Stashed changes
 } from "../service/rag.service.js";
 
 /**
@@ -134,44 +129,3 @@ export const queryDocumentController = async (req, res, next) => {
     next(error);
   }
 };
-<<<<<<< Updated upstream
-=======
-
-/**
- * GET /api/rag/documents/:documentId
- * Returns metadata for a single document owned by the logged in user.
- */
-export const getDocumentMetaController = async (req, res, next) => {
-  try {
-    const documentId = Number(req.params.documentId);
-    const userId = req.user.id;
-
-    const document = await getDocumentMetaService(documentId, userId);
-
-    res.status(200).json({
-      success: true,
-      message: "Document fetched successfully.",
-      data: document,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const deleteDocumentController = async (req, res, next) => {
-  try {
-    const deletedDocument = await deleteDocumentService({
-      userId: req.user.id,
-      documentId: req.params.documentId,
-    });
-
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "Document deleted successfully.",
-      data: deletedDocument,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
->>>>>>> Stashed changes
