@@ -5,20 +5,65 @@ import {
   createDocumentMulterErrorHandler,
   handlePdfUpload,
 } from "../../../middleware/rag.upload.js";
+
+import {
+  documentIdParamValidation,
+  queryDocumentValidation,
+  getDocumentFileValidation,
+  documentIdValidation,
+  
+} from "../validation/rag.validation.js";
+
 import {
   createDocumentController,
   deleteDocumentController,
   listDocumentsController,
   queryDocumentController,
+  getDocumentMetaController,
+  getDocumentFileController,
   searchInDocumentController,
 } from "../controller/rag.controller.js";
-import {
-  documentIdParamValidation,
-  documentIdValidation,
-  queryDocumentValidation,
-} from "../validation/rag.validation.js";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const router = express.Router();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * @route POST /api/rag/documents
@@ -69,6 +114,12 @@ router.get(
   documentIdParamValidation,
   validationErrorHandler,
   getDocumentMetaController,
+);
+router.get(
+  "/documents/:documentId/file",
+  authenticateUser,
+  getDocumentFileValidation,
+  getDocumentFileController,
 );
 
 /**
