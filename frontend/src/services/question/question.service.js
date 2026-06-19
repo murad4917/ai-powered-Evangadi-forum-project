@@ -1,22 +1,22 @@
-import { apiClient } from '../core/api.client.js';
+import { apiClient } from "../core/api.client.js";
 
 /**
  * Centralized error handler for question service requests.
  */
 function handleQuestionError(error) {
   if (!error.response) {
-    if (error.code === 'ECONNABORTED') {
-      return new Error('Request timed out. Please try again.');
+    if (error.code === "ECONNABORTED") {
+      return new Error("Request timed out. Please try again.");
     }
     return new Error(
-      'Unable to connect to server. Please check your internet connection.',
+      "Unable to connect to server. Please check your internet connection.",
     );
   }
 
   const backendMessage =
     error.response.data?.msg || error.response.data?.message;
 
-  return new Error(backendMessage || 'Failed to fetch questions.');
+  return new Error(backendMessage || "Failed to fetch questions.");
 }
 
 /**
@@ -30,7 +30,7 @@ async function getQuestions({ search, mine } = {}) {
     if (search?.trim()) params.search = search.trim();
     if (mine) params.mine = true;
 
-    const response = await apiClient.get('/api/questions', { params });
+    const response = await apiClient.get("/api/questions", { params });
     return response.data.data ?? [];
   } catch (error) {
     throw handleQuestionError(error);
@@ -44,7 +44,7 @@ async function getQuestions({ search, mine } = {}) {
  */
 async function createQuestion({ title, content }) {
   try {
-    const response = await apiClient.post('/api/questions', { title, content });
+    const response = await apiClient.post("/api/questions", { title, content });
     return response.data.data;
   } catch (error) {
     throw handleQuestionError(error);
@@ -58,11 +58,11 @@ async function createQuestion({ title, content }) {
  */
 async function generateQuestionDraftCoach({ title, content }) {
   try {
-    const response = await apiClient.post('/api/questions/draft-coach', {
+    const response = await apiClient.post("/api/questions/draft-coach", {
       title,
       content,
     });
-    return response.data.tips ?? [];
+    return response.data.data.tips ?? [];
   } catch (error) {
     throw handleQuestionError(error);
   }
