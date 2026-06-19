@@ -6,17 +6,17 @@ import {
   handlePdfUpload,
 } from "../../../middleware/rag.upload.js";
 import {
-  documentIdParamValidation,
-  queryDocumentValidation,
-  getDocumentFileValidation,
-} from "../validation/rag.validation.js";
-import {
   createDocumentController,
+  deleteDocumentController,
+  listDocumentsController,
   queryDocumentController,
-  getDocumentMetaController,
-  getDocumentFileController
+  searchInDocumentController,
 } from "../controller/rag.controller.js";
-import { searchInDocumentController } from "../controller/rag.controller.js";
+import {
+  documentIdParamValidation,
+  documentIdValidation,
+  queryDocumentValidation,
+} from "../validation/rag.validation.js";
 
 const router = express.Router();
 
@@ -34,12 +34,18 @@ router.post(
 
 router.use(createDocumentMulterErrorHandler);
 
-export default router;
 /**
- *  T-23: Semantic Search Route
- * GET /api/rag/documents/:documentId/search
+ * T-24: List RAG Documents Route
+ * @route GET /api/rag/documents
+ * @access Protected
  */
+router.get("/documents", authenticateUser, listDocumentsController);
 
+/**
+ * T-23: Semantic Search Route
+ * @route GET /api/rag/documents/:documentId/search
+ * @access Protected
+ */
 router.get(
   "/documents/:documentId/search",
   authenticateUser,
@@ -65,9 +71,16 @@ router.get(
   getDocumentMetaController,
 );
 
-router.get(
-  "/documents/:documentId/file",
+/**
+ * @route DELETE /api/rag/documents/:documentId
+ * @desc Delete one owned RAG document and its stored PDF
+ * @access Protected
+ */
+router.delete(
+  "/documents/:documentId",
   authenticateUser,
-  getDocumentFileValidation,
-  getDocumentFileController,
+  documentIdValidation,
+  deleteDocumentController,
 );
+
+export default router;

@@ -1,12 +1,15 @@
 import fs from "fs/promises";
+import path from "path";
+import { unlink } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
 import { safeExecute } from "../../../../db/config.js";
 import {
   BadRequestError,
-  NotFoundError,
   ServiceUnavailableError,
+  NotFoundError,
 } from "../../../utils/errors/index.js";
 import { generateQuestionEmbedding } from "../../question/service/vector.service.js";
+import { RAG_UPLOADS_ROOT } from "../../../middleware/rag.upload.js";
 import { GoogleGenAI } from "@google/genai";
 
 const RAG_SEARCH_K = 5;
@@ -136,6 +139,19 @@ async function fetchDocumentById(documentId) {
   return rows[0] ?? null;
 }
 
+function resolveOwnedDocumentPath(storagePath) {
+  const absolutePath = path.resolve(RAG_UPLOADS_ROOT, storagePath);
+
+  if (
+    absolutePath !== RAG_UPLOADS_ROOT &&
+    !absolutePath.startsWith(`${RAG_UPLOADS_ROOT}${path.sep}`)
+  ) {
+    throw new BadRequestError("Invalid document storage path.");
+  }
+
+  return absolutePath;
+}
+
 async function updateDocumentStatus({
   documentId,
   status,
@@ -148,6 +164,16 @@ async function updateDocumentStatus({
   `;
 
   await safeExecute(sql, [status, errorMessage, documentId]);
+}
+
+export async function assertOwnedDocument({ documentId, userId }) {
+  const document = await fetchDocumentById(documentId);
+
+  if (!document || document.user_id !== userId) {
+    throw new NotFoundError("Document not found");
+  }
+
+  return document;
 }
 
 async function deleteDocumentChunksByDocumentId(documentId) {
@@ -301,14 +327,29 @@ export async function createDocumentFromUploadService({
   return mapDocumentToResponse(readyDocument);
 }
 
-/**
- * ======================================================
- * T-23: Safe embedding parser
- * Handles:
- * - JSON string from DB
- * - Already-parsed array
- * ======================================================
- */
+export async function deleteDocumentService({ userId, documentId }) {
+  const document = await assertOwnedDocument({ documentId, userId });
+  const absolutePath = resolveOwnedDocumentPath(document.storage_path);
+
+  try {
+    await unlink(absolutePath);
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  await safeExecute(
+    `
+      DELETE FROM documents
+      WHERE document_id = ? AND user_id = ?
+    `,
+    [documentId, userId],
+  );
+
+  return { id: documentId };
+}
+
 function parseEmbedding(embedding) {
   if (!embedding) return [];
 
@@ -316,7 +357,6 @@ function parseEmbedding(embedding) {
     try {
       return JSON.parse(embedding);
     } catch (error) {
-      // Prevent crash if DB has corrupted data
       return [];
     }
   }
@@ -324,12 +364,6 @@ function parseEmbedding(embedding) {
   return embedding;
 }
 
-/**
- * ======================================================
- * T-23: Cosine Similarity Function
- * Measures similarity between query and chunk vectors
- * ======================================================
- */
 function cosineSimilarity(vecA, vecB) {
   if (!vecA || !vecB || vecA.length !== vecB.length) {
     return 0;
@@ -346,15 +380,9 @@ function cosineSimilarity(vecA, vecB) {
   }
 
   const denom = Math.sqrt(normA) * Math.sqrt(normB);
-
   return denom === 0 ? 0 : dot / denom;
 }
 
-/**
- * ======================================================
- * T-23: Fetch all chunk embeddings for a document
- * ======================================================
- */
 async function fetchDocumentChunksWithVectors(documentId) {
   const sql = `
     SELECT
@@ -371,32 +399,14 @@ async function fetchDocumentChunksWithVectors(documentId) {
   return await safeExecute(sql, [documentId]);
 }
 
-/**
- * ======================================================
- * T-23: Semantic Search Service
- * Flow:
- * 1. Verify document exists
- * 2. Check ownership
- * 3. Ensure document is ready
- * 4. Generate query embedding (Gemini)
- * 5. Fetch stored embeddings
- * 6. Compute similarity
- * 7. Rank results
- * 8. Return top K
- * ======================================================
- */
-
 function getGeneratedText(response) {
-  // In @google/genai `response.text` is a getter that may throw when the
-  // response contains no usable candidates (e.g. safety block). Wrap it so we
-  // can always fall through to the manual candidates parse as a safe fallback.
   try {
     const txt = response.text;
     if (typeof txt === "string" && txt.trim()) {
       return txt.trim();
     }
   } catch {
-    // getter threw — fall through to manual parse below
+    // getter threw — fall through
   }
 
   const parts = response.candidates?.[0]?.content?.parts || [];
@@ -439,44 +449,26 @@ export async function searchInDocumentService({
   k = 5,
   userId,
 }) {
-  /**
-   * T-23: Step 1 - Fetch document
-   */
   const document = await fetchDocumentById(documentId);
 
   if (!document) {
     throw new BadRequestError("Document not found.");
   }
 
-  /**
-   * T-23: Step 2 - Verify ownership
-   */
   if (document.user_id !== userId) {
     throw new BadRequestError("You do not have access to this document.");
   }
 
-  /**
-   * T-23: Step 3 - Check processing status
-   */
   if (document.status !== "ready") {
     throw new BadRequestError("Document is not ready for searching.");
   }
 
-  /**
-   * T-23: Step 4 - Generate query embedding
-   */
   const { embedding: queryEmbedding } = await generateQuestionEmbedding(query, {
     taskType: "RETRIEVAL_QUERY",
   });
 
-  /**
-   * T-23: Step 5 - Load stored chunk vectors
-   */
   const chunks = await fetchDocumentChunksWithVectors(documentId);
 
-  /**
-   * T-23: Step 6 - Compute similarity scores
-   */
   const rankedResults = chunks.map((chunk) => {
     const embedding = parseEmbedding(chunk.embedding);
 
@@ -484,25 +476,44 @@ export async function searchInDocumentService({
       chunkId: chunk.chunk_id,
       chunkIndex: chunk.chunk_index,
       excerpt: chunk.content,
-
       score: cosineSimilarity(queryEmbedding, embedding),
     };
   });
 
-  /**
-   * T-23: Step 7 - Sort by highest relevance
-   */
   rankedResults.sort((a, b) => b.score - a.score);
-
-  /**
-   * T-23: Step 8 - Return top K results
-   */
   const topResults = rankedResults.slice(0, k);
 
   return {
     query,
     results: topResults,
   };
+}
+
+/**
+ * T-24: List User RAG Documents Service
+ * Queries the documents table for a specific user,
+ * ordered by latest upload, and maps the output.
+ */
+export async function listDocumentsForUserService(userId) {
+  const sql = `
+    SELECT 
+      document_id,
+      user_id,
+      title,
+      mime_type,
+      storage_path,
+      byte_size,
+      status,
+      error_message,
+      created_at,
+      updated_at
+    FROM documents
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+  `;
+
+  const rows = await safeExecute(sql, [userId]);
+  return rows.map((row) => mapDocumentToResponse(row));
 }
 
 export async function answerFromRagChunksService({ query, chunks }) {
@@ -526,8 +537,6 @@ export async function answerFromRagChunksService({ query, chunks }) {
 
     return answer;
   } catch (error) {
-    // Log the actual Gemini / network error so it is visible in server logs.
-    // Common causes: quota exhaustion (429), wrong model name, network timeout.
     console.error(
       `[RAG] answerFromRagChunksService failed (model=${GEMINI_GENERATION_MODEL}):`,
       error?.message ?? error,
@@ -539,9 +548,6 @@ export async function answerFromRagChunksService({ query, chunks }) {
 }
 
 export async function queryDocumentService({ userId, documentId, query }) {
-  // Retrieval first: find the chunks most semantically similar to the user's
-  // question, then pass only those chunks to generation. This is the core RAG
-  // pattern and keeps the answer grounded in a small, auditable context window.
   const searchResult = await searchInDocumentService({
     userId,
     documentId,
@@ -564,10 +570,6 @@ export async function queryDocumentService({ userId, documentId, query }) {
 
 /**
  * Get metadata for a single document, but only if it belongs to this user.
- *
- * @param {number} documentId
- * @param {number} userId
- * @returns {Promise<object>} the document record
  */
 export const getDocumentMetaService = async (documentId, userId) => {
   const rows = await safeExecute(
@@ -596,20 +598,4 @@ export const getDocumentMetaService = async (documentId, userId) => {
     created_at: doc.created_at,
     updated_at: doc.updated_at,
   };
-};
-
-export const assertOwnedDocument = async (documentId, userId) => {
-  const rows = await safeExecute(
-    `SELECT document_id, title, mime_type, storage_path
-     FROM documents
-     WHERE document_id = ? AND user_id = ?
-     LIMIT 1`,
-    [documentId, userId],
-  );
-
-  if (rows.length === 0) {
-    throw new NotFoundError("Document not found.");
-  }
-
-  return rows[0];
 };
