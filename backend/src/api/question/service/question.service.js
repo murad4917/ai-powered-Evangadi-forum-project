@@ -46,7 +46,7 @@ export const createQuestionService = async (payload) => {
   }
 
   const questionId = result.insertId;
-
+console.log(questionId);
   const creationResult = {
     id: questionId,
     questionHash,

@@ -1,5 +1,6 @@
 import express from "express";
 import { authenticateUser } from "../../../middleware/authentication.js";
+import { validationErrorHandler } from "../../../middleware/validation-handler.js";
 import {
   createDocumentMulterErrorHandler,
   handlePdfUpload,
@@ -61,6 +62,13 @@ router.post(
   authenticateUser,
   queryDocumentValidation,
   queryDocumentController,
+);
+router.get(
+  "/documents/:documentId",
+  authenticateUser,
+  documentIdParamValidation,
+  validationErrorHandler,
+  getDocumentMetaController,
 );
 
 /**

@@ -6,9 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import { Copy, Check } from 'lucide-react';
 import styles from './RagAnswerBody.module.css';
 
-/**
- * @param {{ children: string }} props
- */
+// @param {{ children: string }} props
+ 
 export default function RagAnswerBody({ children }) {
   const text = typeof children === 'string' ? children : '';
   if (!text.trim()) return null;

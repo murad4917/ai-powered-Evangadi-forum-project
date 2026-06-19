@@ -32,9 +32,10 @@ export const searchDocumentValidation = [
 
 export const documentIdParamValidation = [
   param("documentId")
+    .exists()
+    .withMessage("documentId is required")
     .isInt({ min: 1 })
-    .withMessage("documentId must be a positive integer")
-    .toInt(),
+    .withMessage("documentId must be a positive integer"),
   validationErrorHandler,
 ];
 
@@ -50,3 +51,5 @@ export const queryDocumentValidation = [
     .withMessage("query must be between 3 and 1000 characters"),
   validationErrorHandler,
 ];
+
+export const getDocumentFileValidation = [...documentIdParamValidation];

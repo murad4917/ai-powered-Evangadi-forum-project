@@ -1,9 +1,9 @@
-import { safeExecute } from '../../../../../db/config.js';
+import { safeExecute } from '../../../../db/config.js';
 import {
   BadRequestError,
   NotFoundError,
   UnauthenticatedError,
-} from '../../../../../utils/errors/index.js';
+} from '../../../../../backend/src/utils/errors/index.js';
 
 /**
  * Maps a raw database row to a structured answer object.
