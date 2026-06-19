@@ -8,11 +8,13 @@ import {
 import {
   documentIdParamValidation,
   queryDocumentValidation,
+  getDocumentFileValidation,
 } from "../validation/rag.validation.js";
 import {
   createDocumentController,
   queryDocumentController,
   getDocumentMetaController,
+  getDocumentFileController
 } from "../controller/rag.controller.js";
 import { searchInDocumentController } from "../controller/rag.controller.js";
 
@@ -61,4 +63,11 @@ router.get(
   documentIdParamValidation,
   validationErrorHandler,
   getDocumentMetaController,
+);
+
+router.get(
+  "/documents/:documentId/file",
+  authenticateUser,
+  getDocumentFileValidation,
+  getDocumentFileController,
 );
