@@ -3,6 +3,9 @@ import { PDFParse } from "pdf-parse";
 import { safeExecute } from "../../../../db/config.js";
 import { BadRequestError } from "../../../utils/errors/index.js";
 import { generateQuestionEmbedding } from "../../question/service/vector.service.js";
+import { RAG_UPLOADS_ROOT } from "../../../middleware/rag.upload.js";
+import path from "path";
+import { NotFoundError } from "../../../utils/errors/index.js";
 
 function mapDocumentToResponse(row) {
   return {
@@ -126,7 +129,11 @@ async function fetchDocumentById(documentId) {
   return rows[0] ?? null;
 }
 
-async function updateDocumentStatus({ documentId, status, errorMessage = null }) {
+async function updateDocumentStatus({
+  documentId,
+  status,
+  errorMessage = null,
+}) {
   const sql = `
     UPDATE documents
     SET status = ?, error_message = ?
@@ -237,7 +244,6 @@ async function markDocumentFailed(documentId, error) {
   });
 }
 
-
 export async function createDocumentFromUploadService({
   userId,
   file,
@@ -287,7 +293,6 @@ export async function createDocumentFromUploadService({
 
   return mapDocumentToResponse(readyDocument);
 }
-
 
 /**
  * ======================================================
@@ -405,10 +410,9 @@ export async function searchInDocumentService({
   /**
    * T-23: Step 4 - Generate query embedding
    */
-  const { embedding: queryEmbedding } =
-    await generateQuestionEmbedding(query, {
-      taskType: "RETRIEVAL_QUERY",
-    });
+  const { embedding: queryEmbedding } = await generateQuestionEmbedding(query, {
+    taskType: "RETRIEVAL_QUERY",
+  });
 
   /**
    * T-23: Step 5 - Load stored chunk vectors
@@ -444,4 +448,56 @@ export async function searchInDocumentService({
     query,
     results: topResults,
   };
+}
+
+/**
+ * ======================================================
+ * Delete RAG Document Service
+ * Flow:
+ * 1. Fetch document to verify existence & ownership
+ * 2. Purge structural physical file from disk using fs/promises
+ * 3. Delete document record (Foreign keys cascade to chunks & vectors)
+ * ======================================================
+ */
+export async function deleteDocumentService(documentId, userId) {
+  // 1. Verify existence and security ownership matching your schema layout
+  const sqlSelect = `
+    SELECT document_id, user_id, storage_path 
+    FROM documents 
+    WHERE document_id = ?
+    LIMIT 1
+  `;
+  const rows = await safeExecute(sqlSelect, [documentId]);
+  const document = rows[0];
+
+  // Using your custom NotFoundError matching system standards
+  if (!document || document.user_id !== userId) {
+    throw new NotFoundError("Document not found or unauthorized access.");
+  }
+
+  // 2. Physical File Deletion using file system promises
+  if (document.storage_path) {
+    const absolutePath = path.join(RAG_UPLOADS_ROOT, document.storage_path);
+
+    try {
+      await fs.unlink(absolutePath);
+    } catch (fsError) {
+      // If file has already been wiped or path is missing, swallow safely and clear DB
+      if (fsError.code !== "ENOENT") {
+        console.error(
+          `Failed to completely un-link file storage block at ${absolutePath}:`,
+          fsError,
+        );
+      }
+    }
+  }
+
+  // 3. Database Execution row wipe
+  const sqlDelete = `
+    DELETE FROM documents 
+    WHERE document_id = ?
+  `;
+  await safeExecute(sqlDelete, [documentId]);
+
+  return { id: document.document_id };
 }

@@ -4,13 +4,11 @@
 // ======================================================
 
 import { param, query } from "express-validator";
-import { validationErrorHandler } from "../../../middleware/validationErrorHandler.js";
+import { validationErrorHandler } from "../../../middleware/validation-handler.js";
 
 export const searchDocumentValidation = [
   // T-23: Validate documentId param
-  param("documentId")
-    .isInt()
-    .withMessage("documentId must be an integer"),
+  param("documentId").isInt().withMessage("documentId must be an integer"),
 
   // T-23: Validate search query
   query("query")
@@ -26,5 +24,14 @@ export const searchDocumentValidation = [
     .withMessage("k must be a number between 1 and 50"),
 
   // T-23: Final validation handler
+  validationErrorHandler,
+];
+
+// Document Deletion Validation
+// Endpoint: DELETE /api/rag/documents/:documentId
+
+export const deleteDocumentValidation = [
+  param("documentId").isInt().withMessage("documentId must be an integer"),
+
   validationErrorHandler,
 ];

@@ -5,6 +5,7 @@ import { BadRequestError } from "../../../utils/errors/index.js";
 import { createDocumentFromUploadService } from "../service/rag.service.js";
 import { searchInDocumentService } from "../service/rag.service.js";
 
+import { deleteDocumentService } from "../service/rag.service.js";
 
 /**
  * Handles POST /api/rag/documents — delegates upload processing to the service layer.
@@ -83,8 +84,28 @@ export const searchInDocumentController = async (req, res, next) => {
       message: "Ranked chunk excerpts",
       data,
     });
-
   } catch (error) {
     next(error);
   }
 };
+
+// ==================================================
+// T-24: Rag Deletion Controller
+// Endpoint: DELETE /api/rag/documents/:documentId
+// ==================================================
+export async function deleteDocumentController(req, res, next) {
+  try {
+    const { documentId } = req.params;
+    const userId = req.user?.id || req.user?.userId; // Adjust based on your auth token schema layout
+
+    const deletedData = await deleteDocumentService(Number(documentId), userId);
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Document deleted successfully.",
+      data: deletedData,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
