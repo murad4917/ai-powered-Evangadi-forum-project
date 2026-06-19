@@ -31,44 +31,53 @@ async function fetchGeminiJsonTextResponse(userPrompt) {
   const text = response?.response?.text?.();
   return typeof text === "string" ? text : "";
 }
-export const generateQuestionDraftCoachService = async ({ title, content }) => {
-  try {
-    const prompt = `
-You are a senior programming forum expert.
+/**
+ *Short coaching tips a question draft (forum/coursework context).
+ *@param {{title:string;content:string}}param
+ *@returns {promise<{tips:string[]}>}
+ */
 
-Your task is to review a question draft and give improvement tips.
+export const generateQuestionDraftCoachService = async ({ title, content }) => {
+  const userPrompt = `You help learners write clearer technical forum posts.
+
+Question TITLE:
+${title}
+
+Question BODY (markdown allowed):
+${content}
+
+Reply with ONLY valid JSON (no markdown fences), exactly this shape:
+{"tips":["...", "..."]}
 
 Rules:
-- Focus on clarity, completeness, and usefulness
-- Do NOT answer the question
-- Only give improvement suggestions
+- tips: array of 3 to 5 short strings (each under 120 characters).
+- Focus on: missing context (error message, expected vs actual), reproducibility, a sharper title idea if needed, tone for peers.
+- Do not claim the question is "correct" or grade homework; give constructive checklist-style tips only.`;
 
-Title:
-${title || "No title"}
+  try {
+    const raw = await fetchGeminiJsonTextResponse(userPrompt);
+    const parsed = parseJsonObjectFromGeminiText(raw);
+    let tips = Array.isArray(parsed?.tips)
+      ? parsed.tips
+          .filter((t) => typeof t === "string" && t.trim())
+          .map((t) => t.trim())
+      : [];
 
-Content:
-${content || "No content"}
+    tips = tips.slice(0, 5);
 
-Return ONLY 3–5 short bullet-point tips.
-`;
-
-    // Clean, standard model string
-    const model = genai.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
-    });
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    const tips = text
-      .split("\n")
-      .map((t) => t.replace(/^[-*•]\s*/, "").trim())
-      .filter((t) => t.length > 0);
+    if (tips.length === 0) {
+      tips = [
+        "Add any error messages or exact behavior you see.",
+        "Say what you already tried and what you expected instead.",
+      ];
+    }
 
     return { tips };
   } catch (error) {
-    console.error("Draft coach error:", error.message);
-    throw error;
+    console.error("generateQuestionDraftCoachService:", error);
+    throw new ServiceUnavailableError(
+      "AI draft coach is temporarily unavailable. Please try again later.",
+    );
   }
 };
 /**
