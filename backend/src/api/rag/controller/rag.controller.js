@@ -2,10 +2,12 @@ import { StatusCodes } from "http-status-codes";
 import { persistMemoryUpload } from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
 import { BadRequestError } from "../../../utils/errors/index.js";
-import { createDocumentFromUploadService } from "../service/rag.service.js";
 import {
+  createDocumentFromUploadService,
+  deleteDocumentService,
   searchInDocumentService,
-  listDocumentsForUserService,
+  queryDocumentService,
+  listDocumentsForUserService, // Added your service import back
 } from "../service/rag.service.js";
 
 /**
@@ -38,17 +40,52 @@ export const createDocumentController = async (req, res, next) => {
 };
 
 /**
+ * T-24: List RAG Documents Controller
+ * Handles GET /api/rag/documents
+ */
+export const listDocumentsController = async (req, res, next) => {
+  try {
+    const userId = req.user.id; // Get authenticated user id from middleware
+    const data = await listDocumentsForUserService(userId);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Documents fetched successfully.",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Handles DELETE /api/rag/documents/:documentId
+ */
+export const deleteDocumentController = async (req, res, next) => {
+  try {
+    const deletedDocument = await deleteDocumentService({
+      userId: req.user.id,
+      documentId: req.params.documentId,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Document deleted successfully.",
+      data: deletedDocument,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * ======================================================
  * T-23: Semantic Search in RAG Document Controller
  * Endpoint: GET /api/rag/documents/:documentId/search
  * ======================================================
  */
-
 export const searchInDocumentController = async (req, res, next) => {
   try {
-    // ==================================================
-    // T-23: Validate and extract params safely
-    // ==================================================
     const documentId = parseInt(req.params.documentId, 10);
 
     if (isNaN(documentId)) {
@@ -67,9 +104,6 @@ export const searchInDocumentController = async (req, res, next) => {
       throw new BadRequestError("k must be a positive number");
     }
 
-    // ==================================================
-    // T-23: Call semantic search service
-    // ==================================================
     const data = await searchInDocumentService({
       documentId,
       query,
@@ -77,10 +111,7 @@ export const searchInDocumentController = async (req, res, next) => {
       userId: req.user.id,
     });
 
-    // ==================================================
-    // T-23: Response
-    // ==================================================
-    return res.status(200).json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: "Ranked chunk excerpts",
       data,
@@ -89,22 +120,22 @@ export const searchInDocumentController = async (req, res, next) => {
     next(error);
   }
 };
+
 /**
- * ======================================================
- * T-24: List User RAG Documents Controller
- * Endpoint: GET /api/rag/documents
- * ======================================================
+ * Handles POST /api/rag/documents/:documentId/query
  */
-export const listDocumentsController = async (req, res, next) => {
+export const queryDocumentController = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const answerPayload = await queryDocumentService({
+      userId: req.user.id,
+      documentId: req.params.documentId,
+      query: req.body.query,
+    });
 
-    const documents = await listDocumentsForUserService(userId);
-
-    return res.status(StatusCodes.OK).json({
+    res.status(StatusCodes.OK).json({
       success: true,
-      message: "Documents fetched successfully.",
-      data: documents,
+      message: "Answer and citations",
+      data: answerPayload,
     });
   } catch (error) {
     next(error);

@@ -4,9 +4,19 @@ import {
   createDocumentMulterErrorHandler,
   handlePdfUpload,
 } from "../../../middleware/rag.upload.js";
-import { createDocumentController } from "../controller/rag.controller.js";
-import { searchInDocumentController } from "../controller/rag.controller.js";
-import { listDocumentsController } from "../controller/rag.controller.js";
+import {
+  createDocumentController,
+  deleteDocumentController,
+  listDocumentsController,
+  queryDocumentController,
+  searchInDocumentController,
+} from "../controller/rag.controller.js";
+import {
+  documentIdParamValidation,
+  documentIdValidation,
+  queryDocumentValidation,
+} from "../validation/rag.validation.js";
+
 const router = express.Router();
 
 /**
@@ -24,19 +34,45 @@ router.post(
 router.use(createDocumentMulterErrorHandler);
 
 /**
- *  T-23: Semantic Search Route
- * GET /api/rag/documents/:documentId/search
+ * T-24: List RAG Documents Route
+ * @route GET /api/rag/documents
+ * @access Protected
  */
+router.get("/documents", authenticateUser, listDocumentsController);
 
+/**
+ * T-23: Semantic Search Route
+ * @route GET /api/rag/documents/:documentId/search
+ * @access Protected
+ */
 router.get(
   "/documents/:documentId/search",
   authenticateUser,
   searchInDocumentController,
 );
+
 /**
- * T-24: List RAG Documents Route
- * GET /api/rag/documents
+ * @route POST /api/rag/documents/:documentId/query
+ * @desc Generate an AI answer grounded in the most relevant chunks of one document
+ * @access Protected
  */
-router.get("/documents", authenticateUser, listDocumentsController);
+router.post(
+  "/documents/:documentId/query",
+  authenticateUser,
+  queryDocumentValidation,
+  queryDocumentController,
+);
+
+/**
+ * @route DELETE /api/rag/documents/:documentId
+ * @desc Delete one owned RAG document and its stored PDF
+ * @access Protected
+ */
+router.delete(
+  "/documents/:documentId",
+  authenticateUser,
+  documentIdValidation,
+  deleteDocumentController,
+);
 
 export default router;
