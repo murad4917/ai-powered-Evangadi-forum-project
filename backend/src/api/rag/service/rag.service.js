@@ -167,16 +167,31 @@ async function updateDocumentStatus({
 
   await safeExecute(sql, [status, errorMessage, documentId]);
 }
+//
+export const assertOwnedDocument = async (documentId, userId) => {
+  const rows = await safeExecute(
+    `SELECT document_id, title, mime_type, storage_path
+     FROM documents
+     WHERE document_id = ? AND user_id = ?
+     LIMIT 1`,
+    [documentId, userId],
+  );
+  if (rows.length === 0) {
+    throw new NotFoundError("Document not found.");
+  }
+  return rows[0];
+};
 
-export async function assertOwnedDocument({ documentId, userId }) {
-  const document = await fetchDocumentById(documentId);
+//
+// export async function assertOwnedDocument({ documentId, userId }) {
+//   const document = await fetchDocumentById(documentId);
 
   if (!document || Number(document.user_id) !== Number(userId)) {
     throw new NotFoundError("Document not found");
   }
 
-  return document;
-}
+//   return document;
+// }
 
 async function deleteDocumentChunksByDocumentId(documentId) {
   const sql = `
@@ -330,7 +345,7 @@ export async function createDocumentFromUploadService({
 }
 
 export async function deleteDocumentService({ userId, documentId }) {
-  const document = await assertOwnedDocument({ documentId, userId });
+  const document = await assertOwnedDocument(documentId, userId);
   const absolutePath = resolveOwnedDocumentPath(document.storage_path);
 
   try {

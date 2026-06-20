@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { safeExecute } from "../../../../db/config.js";
-import { BadRequestError } from "../../../utils/errors/index.js";
+import { BadRequestError, NotFoundError } from "../../../utils/errors/index.js";
 
 import {
   normalizeQuestionText,
@@ -46,7 +46,7 @@ export const createQuestionService = async (payload) => {
   }
 
   const questionId = result.insertId;
-console.log(questionId);
+  console.log(questionId);
   const creationResult = {
     id: questionId,
     questionHash,
@@ -243,7 +243,7 @@ export const getSingleQuestionService = async ({
 }) => {
   const normalizedAnswerLimit = 100; // Fixed max 100 records
 
-  
+
   const questionSql = `
         SELECT
             q.question_id AS id,
@@ -422,7 +422,6 @@ export const getSimilarQuestionsService = async ({
     threshold,
     // Exclude the source question itself so it never appears in its own recommendations.
     excludeQuestionId: question.id,
-    queryEmbedding: sourceEmbedding, // optional param
   });
 
   return {

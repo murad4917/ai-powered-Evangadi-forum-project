@@ -3,7 +3,7 @@
  * Data: `ragService` — list, upload, delete, search, query, PDF preview.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FileText,
   Loader2,
@@ -11,29 +11,29 @@ import {
   Sparkles,
   Trash2,
   Upload,
-} from 'lucide-react';
-import RagAnswerBody from '../../components/RagAnswerBody/RagAnswerBody.jsx';
-import { ragService } from '../../services/rag/rag.service.js';
-import styles from './RagDocuments.module.css';
+} from "lucide-react";
+import RagAnswerBody from "../../components/RagAnswerBody/RagAnswerBody.jsx";
+import { ragService } from "../../services/rag/rag.service.js";
+import styles from "./RagDocuments.module.css";
 
 const POLL_INTERVAL_MS = 4000;
 
 function formatBytes(bytes) {
-  if (!bytes || Number.isNaN(bytes)) return '';
+  if (!bytes || Number.isNaN(bytes)) return "";
   const mb = bytes / (1024 * 1024);
   return `${mb.toFixed(2)} MB`;
 }
 
 function statusBadgeClass(status) {
-  if (status === 'ready') return styles['badge--ready'];
-  if (status === 'failed') return styles['badge--failed'];
-  return styles['badge--processing'];
+  if (status === "ready") return styles["badge--ready"];
+  if (status === "failed") return styles["badge--failed"];
+  return styles["badge--processing"];
 }
 
 function statusLabel(status) {
-  if (status === 'ready') return 'READY';
-  if (status === 'failed') return 'FAILED';
-  return 'PROCESSING';
+  if (status === "ready") return "READY";
+  if (status === "failed") return "FAILED";
+  return "PROCESSING";
 }
 
 export default function RagDocuments() {
@@ -53,19 +53,19 @@ export default function RagDocuments() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState(null);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
 
-  const [askQuery, setAskQuery] = useState('');
+  const [askQuery, setAskQuery] = useState("");
   const [askLoading, setAskLoading] = useState(false);
   const [askError, setAskError] = useState(null);
   const [askAnswer, setAskAnswer] = useState(null);
 
   const activeDocument =
-    documents.find(doc => doc.documentId === selectedId) ?? null;
-  const isReady = activeDocument?.status === 'ready';
+    documents.find((doc) => doc.documentId === selectedId) ?? null;
+  const isReady = activeDocument?.status === "ready";
 
   const loadDocuments = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -80,7 +80,7 @@ export default function RagDocuments() {
       return data;
     } catch (err) {
       if (silent) {
-        setListError(err?.message || 'Could not load documents.');
+        setListError(err?.message || "Could not load documents.");
         setDocuments([]);
       }
       return null;
@@ -96,7 +96,7 @@ export default function RagDocuments() {
   }, [loadDocuments]);
 
   useEffect(() => {
-    const hasProcessing = documents.some(doc => doc.status === 'processing');
+    const hasProcessing = documents.some((doc) => doc.status === "processing");
     if (!hasProcessing) return undefined;
 
     const timer = window.setInterval(() => {
@@ -108,7 +108,7 @@ export default function RagDocuments() {
 
   useEffect(() => {
     if (!selectedId || !isReady) {
-      setPdfUrl(prev => {
+      setPdfUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         return null;
       });
@@ -122,7 +122,7 @@ export default function RagDocuments() {
     async function loadPreview() {
       setPreviewLoading(true);
       setPreviewError(null);
-      setPdfUrl(prev => {
+      setPdfUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         return null;
       });
@@ -159,15 +159,15 @@ export default function RagDocuments() {
   }, [pdfUrl]);
 
   useEffect(() => {
-    setSearchQuery('');
+    setSearchQuery("");
     setSearchResults([]);
     setSearchError(null);
-    setAskQuery('');
+    setAskQuery("");
     setAskAnswer(null);
     setAskError(null);
   }, [selectedId]);
 
-  const handleFileChange = event => {
+  const handleFileChange = (event) => {
     const file = event.target.files?.[0] ?? null;
     setSelectedFile(file);
     setUploadError(null);
@@ -181,12 +181,15 @@ export default function RagDocuments() {
 
     try {
       const created = await ragService.uploadPdf(selectedFile);
-      setDocuments(prev => [created, ...prev.filter(d => d.documentId !== created.documentId)]);
+      setDocuments((prev) => [
+        created,
+        ...prev.filter((d) => d.documentId !== created.documentId),
+      ]);
       setSelectedId(created.documentId);
       setSelectedFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
-      setUploadError(err?.message || 'Upload failed.');
+      setUploadError(err?.message || "Upload failed.");
     } finally {
       setIsUploading(false);
     }
@@ -200,18 +203,20 @@ export default function RagDocuments() {
 
     try {
       await ragService.deleteDocument(documentId);
-      setDocuments(prev => prev.filter(doc => doc.documentId !== documentId));
+      setDocuments((prev) =>
+        prev.filter((doc) => doc.documentId !== documentId),
+      );
       if (selectedId === documentId) {
         setSelectedId(null);
       }
     } catch (err) {
-      setListError(err?.message || 'Could not delete document.');
+      setListError(err?.message || "Could not delete document.");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleSearch = async event => {
+  const handleSearch = async (event) => {
     event.preventDefault();
     if (!activeDocument || !isReady || !searchQuery.trim() || searchLoading) {
       return;
@@ -228,13 +233,13 @@ export default function RagDocuments() {
       );
       setSearchResults(data.results ?? []);
     } catch (err) {
-      setSearchError(err?.message || 'Search failed.');
+      setSearchError(err?.message || "Search failed.");
     } finally {
       setSearchLoading(false);
     }
   };
 
-  const handleAsk = async event => {
+  const handleAsk = async (event) => {
     event.preventDefault();
     if (!activeDocument || !isReady || !askQuery.trim() || askLoading) {
       return;
@@ -249,9 +254,9 @@ export default function RagDocuments() {
         activeDocument.documentId,
         askQuery,
       );
-      setAskAnswer(data.answer ?? '');
+      setAskAnswer(data.answer ?? "");
     } catch (err) {
-      setAskError(err?.message || 'Could not get an answer.');
+      setAskError(err?.message || "Could not get an answer.");
     } finally {
       setAskLoading(false);
     }
@@ -260,7 +265,7 @@ export default function RagDocuments() {
   const renderDocumentList = () => {
     if (listLoading) {
       return (
-        <p className={styles.listLoading} aria-live='polite'>
+        <p className={styles.listLoading} aria-live="polite">
           Loading your library...
         </p>
       );
@@ -275,16 +280,16 @@ export default function RagDocuments() {
     }
 
     return (
-      <ul className={styles.docList} aria-label='Uploaded documents'>
-        {documents.map(doc => {
+      <ul className={styles.docList} aria-label="Uploaded documents">
+        {documents.map((doc) => {
           const isSelected = doc.documentId === selectedId;
           return (
             <li key={doc.documentId}>
               <div
-                className={`${styles.docItem} ${isSelected ? styles['docItem--selected'] : ''}`}
+                className={`${styles.docItem} ${isSelected ? styles["docItem--selected"] : ""}`}
               >
                 <button
-                  type='button'
+                  type="button"
                   className={styles.docItem__select}
                   onClick={() => setSelectedId(doc.documentId)}
                   aria-pressed={isSelected}
@@ -299,9 +304,9 @@ export default function RagDocuments() {
                   </span>
                 </button>
                 <button
-                  type='button'
+                  type="button"
                   className={styles.deleteBtn}
-                  onClick={e => handleDelete(doc.documentId, e)}
+                  onClick={(e) => handleDelete(doc.documentId, e)}
                   disabled={deletingId === doc.documentId}
                   aria-label={`Delete ${doc.title}`}
                 >
@@ -330,10 +335,10 @@ export default function RagDocuments() {
       );
     }
 
-    if (activeDocument.status !== 'ready') {
+    if (activeDocument.status !== "ready") {
       return (
-        <div className={styles.pendingState} role='status'>
-          This document is not ready for preview or AI tools. Current status:{' '}
+        <div className={styles.pendingState} role="status">
+          This document is not ready for preview or AI tools. Current status:{" "}
           <strong>{activeDocument.status}</strong>.
         </div>
       );
@@ -341,19 +346,19 @@ export default function RagDocuments() {
 
     return (
       <div className={styles.activeView}>
-        <section aria-labelledby='reader-title'>
-          <h2 id='reader-title' className={styles.section__title}>
+        <section aria-labelledby="reader-title">
+          <h2 id="reader-title" className={styles.section__title}>
             Reader
           </h2>
           <p className={styles.section__subtitle}>
             Inline preview of the selected PDF.
           </p>
           {previewLoading ? (
-            <div className={styles.previewLoading} aria-live='polite'>
+            <div className={styles.previewLoading} aria-live="polite">
               Loading document preview...
             </div>
           ) : previewError ? (
-            <div className={styles.previewError} role='alert'>
+            <div className={styles.previewError} role="alert">
               {previewError}
             </div>
           ) : pdfUrl ? (
@@ -365,8 +370,8 @@ export default function RagDocuments() {
           ) : null}
         </section>
 
-        <section aria-labelledby='search-title'>
-          <h2 id='search-title' className={styles.section__title}>
+        <section aria-labelledby="search-title">
+          <h2 id="search-title" className={styles.section__title}>
             Semantic search
           </h2>
           <p className={styles.section__subtitle}>
@@ -374,20 +379,20 @@ export default function RagDocuments() {
           </p>
           <form onSubmit={handleSearch}>
             <div className={styles.field}>
-              <label htmlFor='search-query' className={styles.field__label}>
+              <label htmlFor="search-query" className={styles.field__label}>
                 Search query
               </label>
               <input
-                id='search-query'
-                type='text'
+                id="search-query"
+                type="text"
                 className={styles.field__input}
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder='Describe the topic or phrase you are looking for'
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Describe the topic or phrase you are looking for"
               />
             </div>
             <button
-              type='submit'
+              type="submit"
               className={styles.actionBtn}
               disabled={searchLoading || !searchQuery.trim()}
             >
@@ -399,19 +404,21 @@ export default function RagDocuments() {
               Search
             </button>
             {searchError ? (
-              <div className={styles.inlineError} role='alert'>
+              <div className={styles.inlineError} role="alert">
                 {searchError}
               </div>
             ) : null}
             {searchResults.length > 0 ? (
-              <ul className={styles.searchResults} aria-label='Search results'>
-                {searchResults.map(result => (
+              <ul className={styles.searchResults} aria-label="Search results">
+                {searchResults.map((result) => (
                   <li
-                    key={result.chunkId ?? `${result.chunkIndex}-${result.score}`}
+                    key={
+                      result.chunkId ?? `${result.chunkIndex}-${result.score}`
+                    }
                     className={styles.searchResult}
                   >
                     <p className={styles.searchResult__meta}>
-                      Score: {Number(result.score).toFixed(2)} · Chunk{' '}
+                      Score: {Number(result.score).toFixed(2)} · Chunk{" "}
                       {result.chunkIndex}
                     </p>
                     <p className={styles.searchResult__excerpt}>
@@ -424,8 +431,8 @@ export default function RagDocuments() {
           </form>
         </section>
 
-        <section aria-labelledby='ask-title'>
-          <h2 id='ask-title' className={styles.section__title}>
+        <section aria-labelledby="ask-title">
+          <h2 id="ask-title" className={styles.section__title}>
             Ask with AI
           </h2>
           <p className={styles.section__subtitle}>
@@ -434,20 +441,20 @@ export default function RagDocuments() {
           </p>
           <form onSubmit={handleAsk}>
             <div className={styles.field}>
-              <label htmlFor='ask-query' className={styles.field__label}>
+              <label htmlFor="ask-query" className={styles.field__label}>
                 Question
               </label>
               <textarea
-                id='ask-query'
+                id="ask-query"
                 className={styles.field__textarea}
                 value={askQuery}
-                onChange={e => setAskQuery(e.target.value)}
-                placeholder='Ask a clear question in plain language...'
+                onChange={(e) => setAskQuery(e.target.value)}
+                placeholder="Ask a clear question in plain language..."
                 rows={4}
               />
             </div>
             <button
-              type='submit'
+              type="submit"
               className={styles.actionBtn}
               disabled={askLoading || !askQuery.trim()}
             >
@@ -459,7 +466,7 @@ export default function RagDocuments() {
               Ask
             </button>
             {askError ? (
-              <div className={styles.inlineError} role='alert'>
+              <div className={styles.inlineError} role="alert">
                 {askError}
               </div>
             ) : null}
@@ -476,9 +483,9 @@ export default function RagDocuments() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.header} aria-labelledby='rag-title'>
+      <section className={styles.header} aria-labelledby="rag-title">
         <p className={styles.header__eyebrow}>Knowledge base</p>
-        <h1 id='rag-title' className={styles.header__title}>
+        <h1 id="rag-title" className={styles.header__title}>
           Private PDF library
         </h1>
         <p className={styles.header__description}>
@@ -490,14 +497,14 @@ export default function RagDocuments() {
       </section>
 
       {listError ? (
-        <div className={styles.listError} role='alert'>
+        <div className={styles.listError} role="alert">
           {listError}
         </div>
       ) : null}
 
       <div className={styles.workspace}>
-        <section className={styles.panel} aria-labelledby='library-title'>
-          <h2 id='library-title' className={styles.panel__title}>
+        <section className={styles.panel} aria-labelledby="library-title">
+          <h2 id="library-title" className={styles.panel__title}>
             Library
           </h2>
           <p className={styles.panel__subtitle}>
@@ -511,19 +518,19 @@ export default function RagDocuments() {
             <div className={styles.uploadZone__actions}>
               <input
                 ref={fileInputRef}
-                id='pdf-upload'
-                type='file'
-                accept='application/pdf,.pdf'
+                id="pdf-upload"
+                type="file"
+                accept="application/pdf,.pdf"
                 className={styles.fileInput}
                 onChange={handleFileChange}
                 disabled={isUploading}
               />
-              <label htmlFor='pdf-upload' className={styles.chooseBtn}>
+              <label htmlFor="pdf-upload" className={styles.chooseBtn}>
                 <FileText size={16} aria-hidden />
                 Choose file
               </label>
               <button
-                type='button'
+                type="button"
                 className={styles.uploadBtn}
                 onClick={handleUpload}
                 disabled={!selectedFile || isUploading}
@@ -549,14 +556,14 @@ export default function RagDocuments() {
                   </span>
                   {formatBytes(selectedFile.size)
                     ? ` · ${formatBytes(selectedFile.size)}`
-                    : ''}
+                    : ""}
                 </>
               ) : (
-                'No file selected.'
+                "No file selected."
               )}
             </p>
             {uploadError ? (
-              <div className={styles.inlineError} role='alert'>
+              <div className={styles.inlineError} role="alert">
                 {uploadError}
               </div>
             ) : null}
@@ -565,7 +572,7 @@ export default function RagDocuments() {
           {renderDocumentList()}
         </section>
 
-        <section className={styles.panel} aria-live='polite'>
+        <section className={styles.panel} aria-live="polite">
           {renderRightColumn()}
         </section>
       </div>

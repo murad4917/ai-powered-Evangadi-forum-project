@@ -39,6 +39,7 @@ export const documentIdParamValidation = [
   validationErrorHandler,
 ];
 
+
 export const documentIdValidation = documentIdParamValidation;
 
 export const queryDocumentValidation = [

@@ -17,6 +17,12 @@ import {
   assertOwnedDocument,
 } from "../service/rag.service.js";
 
+
+
+
+
+
+
 /**
  * Handles POST /api/rag/documents — delegates upload processing to the service layer.
  */
@@ -127,6 +133,11 @@ export const searchInDocumentController = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+
+
 
 /**
  * Handles POST /api/rag/documents/:documentId/query
