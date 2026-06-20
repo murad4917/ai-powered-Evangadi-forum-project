@@ -160,6 +160,21 @@ export const queryDocumentController = async (req, res, next) => {
   }
 };
 
+export const getDocumentMetaController = async (req, res, next) => {
+  try {
+    const documentId = Number(req.params.documentId);
+    const data = await getDocumentMetaService(documentId, req.user.id);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Document metadata fetched successfully.",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // T-24 STRIMIN RAG PDF
 // T-24: GET /api/rag/documents/:documentId/file
 export const getDocumentFileController = async (req, res, next) => {

@@ -8,7 +8,7 @@ export const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port: parseInt(process.env.DB_PORT) || 3307, //
+  port: parseInt(process.env.DB_PORT) || 3306, // Changed from 3307 to 3306
 });
 
 const ensureParams = (params) => {

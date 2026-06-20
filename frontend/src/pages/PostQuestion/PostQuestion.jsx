@@ -3,8 +3,8 @@
  * Route: `/questions/ask`
  */
 
-import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bold,
   Check,
@@ -13,17 +13,17 @@ import {
   Link2,
   Send,
   Sparkles,
-} from 'lucide-react';
-import { questionService } from '../../services/question/question.service.js';
-import styles from './PostQuestion.module.css';
+} from "lucide-react";
+import { questionService } from "../../services/question/question.service.js";
+import styles from "./PostQuestion.module.css";
 
 const TITLE_MIN = 5;
 const TITLE_MAX = 255;
 const CONTENT_MIN = 10;
 
 const INITIAL_FORM = {
-  title: '',
-  content: '',
+  title: "",
+  content: "",
 };
 
 function validateForm({ title, content }) {
@@ -76,20 +76,20 @@ export default function PostQuestion() {
   const isBusy = isSubmitting || isCoaching;
 
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setFieldErrors(prev => ({ ...prev, [field]: undefined }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
     setSubmitError(null);
   };
 
-  const applyMarkdown = format => {
+  const applyMarkdown = (format) => {
     const textarea = contentRef.current;
     if (!textarea) return;
 
     const wrappers = {
-      bold: ['**', '**'],
-      italic: ['*', '*'],
-      code: ['`', '`'],
-      link: ['[', '](url)'],
+      bold: ["**", "**"],
+      italic: ["*", "*"],
+      code: ["`", "`"],
+      link: ["[", "](url)"],
     };
 
     const [before, after] = wrappers[format];
@@ -99,7 +99,7 @@ export default function PostQuestion() {
       after,
     );
 
-    updateField('content', nextValue);
+    updateField("content", nextValue);
 
     requestAnimationFrame(() => {
       textarea.focus();
@@ -111,7 +111,7 @@ export default function PostQuestion() {
     const trimmedContent = formData.content.trim();
 
     if (trimmedContent.length < CONTENT_MIN) {
-      setFieldErrors(prev => ({
+      setFieldErrors((prev) => ({
         ...prev,
         content: `Question content must be at least ${CONTENT_MIN} characters`,
       }));
@@ -129,13 +129,13 @@ export default function PostQuestion() {
       });
       setCoachTips(tips);
     } catch (err) {
-      setCoachError(err?.message || 'Failed to load AI suggestions.');
+      setCoachError(err?.message || "Failed to load AI suggestions.");
     } finally {
       setIsCoaching(false);
     }
   };
 
-  const handleSubmit = async event => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const errors = validateForm(formData);
@@ -154,7 +154,7 @@ export default function PostQuestion() {
       });
       setPublishedQuestion(data);
     } catch {
-      setSubmitError('Failed to post question. Please try again.');
+      setSubmitError("Failed to post question. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -171,13 +171,16 @@ export default function PostQuestion() {
 
   if (publishedQuestion) {
     const questionHash =
-      publishedQuestion.questionHash ?? publishedQuestion.id ?? '';
+      publishedQuestion.questionHash ?? publishedQuestion.id ?? "";
 
     return (
       <div className={styles.page}>
-        <section className={styles.header} aria-labelledby='post-question-title'>
+        <section
+          className={styles.header}
+          aria-labelledby="post-question-title"
+        >
           <p className={styles.header__eyebrow}>Ask the cohort</p>
-          <h1 id='post-question-title' className={styles.header__title}>
+          <h1 id="post-question-title" className={styles.header__title}>
             Publish to the forum
           </h1>
           <p className={styles.header__description}>
@@ -186,7 +189,7 @@ export default function PostQuestion() {
           </p>
         </section>
 
-        <section className={styles.successCard} aria-live='polite'>
+        <section className={styles.successCard} aria-live="polite">
           <div className={styles.successCard__icon} aria-hidden>
             <Check size={28} strokeWidth={2.5} />
           </div>
@@ -198,21 +201,21 @@ export default function PostQuestion() {
           </p>
           <div className={styles.successCard__actions}>
             <button
-              type='button'
+              type="button"
               className={styles.successCard__link}
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
             >
               Back to Dashboard
             </button>
             <button
-              type='button'
+              type="button"
               className={styles.successCard__primary}
               onClick={() => navigate(`/question/${questionHash}`)}
             >
               View Question
             </button>
             <button
-              type='button'
+              type="button"
               className={styles.successCard__secondary}
               onClick={handleAskAnother}
             >
@@ -226,9 +229,9 @@ export default function PostQuestion() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.header} aria-labelledby='post-question-title'>
+      <section className={styles.header} aria-labelledby="post-question-title">
         <p className={styles.header__eyebrow}>Ask the cohort</p>
-        <h1 id='post-question-title' className={styles.header__title}>
+        <h1 id="post-question-title" className={styles.header__title}>
           Publish to the forum
         </h1>
         <p className={styles.header__description}>
@@ -237,7 +240,7 @@ export default function PostQuestion() {
         </p>
       </section>
 
-      <section className={styles.guide} aria-label='Posting guidance'>
+      <section className={styles.guide} aria-label="Posting guidance">
         <h2 className={styles.guide__title}>
           Write questions people can answer in one pass
         </h2>
@@ -265,11 +268,12 @@ export default function PostQuestion() {
               Validation rules (enforced by the form)
             </h3>
             <ul className={styles.guide__list}>
+              <li>Title length: 5 to 255 characters</li>
+              <li>Body length: minimum 10 characters</li>
               <li>
-                Title length: {TITLE_MIN} to {TITLE_MAX} characters
+                Single topic: split unrelated bugs into separate threads from
+                horizontal to vertical list
               </li>
-              <li>Body length: minimum {CONTENT_MIN} characters</li>
-              <li>Single topic: split unrelated bugs into separate threads</li>
             </ul>
           </div>
         </div>
@@ -278,13 +282,13 @@ export default function PostQuestion() {
       <section className={styles.formCard}>
         <form onSubmit={handleSubmit} noValidate>
           {submitError ? (
-            <div className={styles.submitError} role='alert'>
+            <div className={styles.submitError} role="alert">
               {submitError}
             </div>
           ) : null}
 
           <div className={styles.field}>
-            <label className={styles.field__label} htmlFor='question-title'>
+            <label className={styles.field__label} htmlFor="question-title">
               Title
             </label>
             <p className={styles.field__hint}>
@@ -292,25 +296,25 @@ export default function PostQuestion() {
               person.
             </p>
             <input
-              id='question-title'
-              type='text'
+              id="question-title"
+              type="text"
               className={`${styles.field__input} ${
-                fieldErrors.title ? styles['field__input--error'] : ''
+                fieldErrors.title ? styles["field__input--error"] : ""
               }`}
               value={formData.title}
-              onChange={event => updateField('title', event.target.value)}
-              placeholder='e.g. How do I handle state management using Context API in React?'
+              onChange={(event) => updateField("title", event.target.value)}
+              placeholder="e.g. How do I handle state management using Context API in React?"
               disabled={isBusy}
               aria-invalid={Boolean(fieldErrors.title)}
               aria-describedby={
-                fieldErrors.title ? 'question-title-error' : undefined
+                fieldErrors.title ? "question-title-error" : undefined
               }
             />
             {fieldErrors.title ? (
               <p
-                id='question-title-error'
+                id="question-title-error"
                 className={styles.field__error}
-                role='alert'
+                role="alert"
               >
                 {fieldErrors.title}
               </p>
@@ -318,7 +322,7 @@ export default function PostQuestion() {
           </div>
 
           <div className={styles.field}>
-            <label className={styles.field__label} htmlFor='question-content'>
+            <label className={styles.field__label} htmlFor="question-content">
               What are the details of your problem?
             </label>
             <p className={styles.field__hint}>
@@ -328,48 +332,48 @@ export default function PostQuestion() {
 
             <div
               className={`${styles.editor} ${
-                fieldErrors.content ? styles['editor--error'] : ''
+                fieldErrors.content ? styles["editor--error"] : ""
               }`}
             >
               <div className={styles.editor__toolbar}>
                 <div className={styles.editor__tools}>
                   <button
-                    type='button'
+                    type="button"
                     className={styles.editor__tool}
-                    onClick={() => applyMarkdown('bold')}
+                    onClick={() => applyMarkdown("bold")}
                     disabled={isBusy}
-                    aria-label='Bold'
-                    title='Bold'
+                    aria-label="Bold"
+                    title="Bold"
                   >
                     <Bold size={16} aria-hidden />
                   </button>
                   <button
-                    type='button'
+                    type="button"
                     className={styles.editor__tool}
-                    onClick={() => applyMarkdown('italic')}
+                    onClick={() => applyMarkdown("italic")}
                     disabled={isBusy}
-                    aria-label='Italic'
-                    title='Italic'
+                    aria-label="Italic"
+                    title="Italic"
                   >
                     <Italic size={16} aria-hidden />
                   </button>
                   <button
-                    type='button'
+                    type="button"
                     className={styles.editor__tool}
-                    onClick={() => applyMarkdown('code')}
+                    onClick={() => applyMarkdown("code")}
                     disabled={isBusy}
-                    aria-label='Code'
-                    title='Code'
+                    aria-label="Code"
+                    title="Code"
                   >
                     <Code2 size={16} aria-hidden />
                   </button>
                   <button
-                    type='button'
+                    type="button"
                     className={styles.editor__tool}
-                    onClick={() => applyMarkdown('link')}
+                    onClick={() => applyMarkdown("link")}
                     disabled={isBusy}
-                    aria-label='Link'
-                    title='Link'
+                    aria-label="Link"
+                    title="Link"
                   >
                     <Link2 size={16} aria-hidden />
                   </button>
@@ -380,25 +384,25 @@ export default function PostQuestion() {
               </div>
 
               <textarea
-                id='question-content'
+                id="question-content"
                 ref={contentRef}
                 className={styles.editor__textarea}
                 value={formData.content}
-                onChange={event => updateField('content', event.target.value)}
-                placeholder='Include all the information someone would need to answer your question... You can use Markdown to format your code!'
+                onChange={(event) => updateField("content", event.target.value)}
+                placeholder="Include all the information someone would need to answer your question... You can use Markdown to format your code!"
                 disabled={isBusy}
                 aria-invalid={Boolean(fieldErrors.content)}
                 aria-describedby={
-                  fieldErrors.content ? 'question-content-error' : undefined
+                  fieldErrors.content ? "question-content-error" : undefined
                 }
               />
             </div>
 
             {fieldErrors.content ? (
               <p
-                id='question-content-error'
+                id="question-content-error"
                 className={styles.field__error}
-                role='alert'
+                role="alert"
               >
                 {fieldErrors.content}
               </p>
@@ -406,13 +410,13 @@ export default function PostQuestion() {
 
             <div className={styles.aiRow}>
               <button
-                type='button'
+                type="button"
                 className={styles.aiButton}
                 onClick={handleCoach}
                 disabled={isBusy}
               >
                 <Sparkles size={16} aria-hidden />
-                {isCoaching ? 'Loading suggestions...' : 'AI suggestions'}
+                {isCoaching ? "Loading suggestions..." : "AI suggestions"}
               </button>
               <span className={styles.aiHint}>
                 Suggestions only. You still choose what to post.
@@ -420,7 +424,7 @@ export default function PostQuestion() {
             </div>
 
             {coachError ? (
-              <div className={styles.coachPanel} role='alert'>
+              <div className={styles.coachPanel} role="alert">
                 <p className={styles.coachPanel__error}>{coachError}</p>
               </div>
             ) : null}
@@ -429,7 +433,7 @@ export default function PostQuestion() {
               <div className={styles.coachPanel}>
                 <h3 className={styles.coachPanel__title}>AI draft coach</h3>
                 <ul className={styles.coachPanel__list}>
-                  {coachTips.map(tip => (
+                  {coachTips.map((tip) => (
                     <li key={tip}>{tip}</li>
                   ))}
                 </ul>
@@ -439,20 +443,20 @@ export default function PostQuestion() {
 
           <div className={styles.actions}>
             <button
-              type='button'
+              type="button"
               className={styles.cancelLink}
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
               disabled={isBusy}
             >
               Cancel
             </button>
             <button
-              type='submit'
+              type="submit"
               className={styles.submitButton}
               disabled={isBusy}
             >
               <Send size={16} aria-hidden />
-              {isSubmitting ? 'Posting...' : 'Post Question'}
+              {isSubmitting ? "Posting..." : "Post Question"}
             </button>
           </div>
         </form>
