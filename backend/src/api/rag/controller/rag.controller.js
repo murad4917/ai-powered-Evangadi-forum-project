@@ -6,13 +6,15 @@ import {
   RAG_UPLOADS_ROOT,
 } from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
-import { BadRequestError } from "../../../utils/errors/index.js";
+import { BadRequestError, NotFoundError } from "../../../utils/errors/index.js";
 import {
   createDocumentFromUploadService,
   deleteDocumentService,
   searchInDocumentService,
   queryDocumentService,
-  listDocumentsForUserService, // Added your service import back
+  listDocumentsForUserService,
+  getDocumentMetaService,
+  assertOwnedDocument,
 } from "../service/rag.service.js";
 
 /**
@@ -146,3 +148,66 @@ export const queryDocumentController = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Handles GET /api/rag/documents/:documentId
+ */
+export const getDocumentMetaController = async (req, res, next) => {
+  try {
+    const data = await getDocumentMetaService(
+      Number(req.params.documentId),
+      req.user.id,
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Document metadata fetched successfully.",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// T-24 STRIMIN RAG PDF
+// T-24: GET /api/rag/documents/:documentId/file
+export const getDocumentFileController = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    const documentId = Number(req.params.documentId);
+    if (!userId) {
+      const err = new Error("Unauthorized");
+      err.statusCode = 401;
+      throw err;
+    }
+    // 1. verify ownership + get document
+    const doc = await assertOwnedDocument({ documentId, userId });
+    const absPath = path.resolve(RAG_UPLOADS_ROOT, doc.storage_path);
+
+    if (
+      absPath !== RAG_UPLOADS_ROOT &&
+      !absPath.startsWith(`${RAG_UPLOADS_ROOT}${path.sep}`)
+    ) {
+      throw new BadRequestError("Invalid document storage path.");
+    }
+
+    try {
+      await fs.access(absPath);
+    } catch {
+      throw new NotFoundError(
+        "Document file not found on server. Delete this entry and upload the PDF again.",
+      );
+    }
+    // 4. headers
+    res.setHeader("Content-Type", doc.mime_type || "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(doc.title || "document.pdf")}"`,
+    );
+    // 5. stream file
+    return res.sendFile(absPath);
+  } catch (error) {
+    next(error);
+  }
+};
+

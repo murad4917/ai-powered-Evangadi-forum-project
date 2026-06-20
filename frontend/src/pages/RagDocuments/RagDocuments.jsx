@@ -135,12 +135,12 @@ export default function RagDocuments() {
           URL.revokeObjectURL(url);
         }
       } catch (err) {
-        if (cancelled) {
+        if (!cancelled) {
           setPreviewError(err?.message || 'Could not load document preview.');
         }
       } finally {
         if (!cancelled) {
-          setPreviewLoading(true);
+          setPreviewLoading(false);
         }
       }
     }

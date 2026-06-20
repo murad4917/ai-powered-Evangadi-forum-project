@@ -11,11 +11,14 @@ import {
   listDocumentsController,
   queryDocumentController,
   searchInDocumentController,
+  getDocumentMetaController,
+  getDocumentFileController,
 } from "../controller/rag.controller.js";
 import {
   documentIdParamValidation,
   documentIdValidation,
   queryDocumentValidation,
+  getDocumentFileValidation,
 } from "../validation/rag.validation.js";
 
 const router = express.Router();
@@ -63,6 +66,19 @@ router.post(
   queryDocumentValidation,
   queryDocumentController,
 );
+
+/**
+ * @route GET /api/rag/documents/:documentId/file
+ * @desc Stream the stored PDF for inline preview
+ * @access Protected
+ */
+router.get(
+  "/documents/:documentId/file",
+  authenticateUser,
+  getDocumentFileValidation,
+  getDocumentFileController,
+);
+
 router.get(
   "/documents/:documentId",
   authenticateUser,

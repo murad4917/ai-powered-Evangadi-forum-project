@@ -134,6 +134,24 @@ async function queryDocument(documentId, query) {
 }
 
 /**
+ * Reads API error text when axios was configured with responseType: 'blob'.
+ */
+async function errorFromBlobResponse(error, fallbackMessage) {
+  const data = error.response?.data;
+  if (!(data instanceof Blob)) {
+    return handleRagError(error, fallbackMessage);
+  }
+
+  try {
+    const text = await data.text();
+    const parsed = JSON.parse(text);
+    return new Error(parsed.msg || parsed.message || fallbackMessage);
+  } catch {
+    return new Error(fallbackMessage);
+  }
+}
+
+/**
  * Fetches the PDF file as a blob object URL for preview.
  * Caller must revoke the URL when done.
  * @param {number|string} documentId
@@ -148,7 +166,10 @@ async function fetchPdfObjectUrl(documentId) {
 
     return URL.createObjectURL(response.data);
   } catch (error) {
-    throw handleRagError(error, 'Could not load document preview.');
+    throw await errorFromBlobResponse(
+      error,
+      'Could not load document preview.',
+    );
   }
 }
 
