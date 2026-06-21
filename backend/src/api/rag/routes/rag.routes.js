@@ -22,15 +22,15 @@ import {
   getDocumentMetaController,
   getDocumentFileController,
   searchInDocumentController,
-  getDocumentMetaController,
-  getDocumentFileController,
+  // getDocumentMetaController,
+  // getDocumentFileController,
 } from "../controller/rag.controller.js";
-import {
-  documentIdParamValidation,
-  documentIdValidation,
-  queryDocumentValidation,
-  getDocumentFileValidation,
-} from "../validation/rag.validation.js";
+// import {
+//   documentIdParamValidation,
+//   // documentIdValidation,
+//   // queryDocumentValidation,
+//   getDocumentFileValidation,
+// } from "../validation/rag.validation.js";
 
 const router = express.Router();
 
