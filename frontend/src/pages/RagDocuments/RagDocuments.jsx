@@ -136,7 +136,7 @@ export default function RagDocuments() {
         }
       } catch (err) {
         if (!cancelled) {
-          setPreviewError(err?.message || "Could not load document preview.");
+          setPreviewError(err?.message || 'Could not load document preview.');
         }
       } finally {
         if (!cancelled) {

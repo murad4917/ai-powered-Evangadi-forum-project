@@ -14,7 +14,9 @@ import { GoogleGenAI } from "@google/genai";
 
 const RAG_SEARCH_K = 5;
 const GEMINI_GENERATION_MODEL =
-  process.env.GEMINI_GENERATION_MODEL || "gemini-2.0-flash";
+  process.env.GEMINI_GENERATION_MODEL ||
+  process.env.GEMINI_TEXT_MODEL ||
+  "gemini-2.5-flash-lite";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 function mapDocumentToResponse(row) {
@@ -184,9 +186,9 @@ export const assertOwnedDocument = async (documentId, userId) => {
 // export async function assertOwnedDocument({ documentId, userId }) {
 //   const document = await fetchDocumentById(documentId);
 
-//   if (!document || document.user_id !== userId) {
-//     throw new NotFoundError("Document not found");
-//   }
+  if (!document || Number(document.user_id) !== Number(userId)) {
+    throw new NotFoundError("Document not found");
+  }
 
 //   return document;
 // }
@@ -470,7 +472,7 @@ export async function searchInDocumentService({
     throw new BadRequestError("Document not found.");
   }
 
-  if (document.user_id !== userId) {
+  if (Number(document.user_id) !== Number(userId)) {
     throw new BadRequestError("You do not have access to this document.");
   }
 
@@ -556,6 +558,14 @@ export async function answerFromRagChunksService({ query, chunks }) {
       `[RAG] answerFromRagChunksService failed (model=${GEMINI_GENERATION_MODEL}):`,
       error?.message ?? error,
     );
+
+    const errorText = String(error?.message ?? error);
+    if (errorText.includes("429") || errorText.includes("RESOURCE_EXHAUSTED")) {
+      throw new ServiceUnavailableError(
+        "Gemini API quota exceeded. Wait a minute and try again, or switch GEMINI_TEXT_MODEL in .env to a model your API key supports.",
+      );
+    }
+
     throw new ServiceUnavailableError(
       "Failed to generate an answer from the document. Please try again later.",
     );
@@ -614,3 +624,4 @@ export const getDocumentMetaService = async (documentId, userId) => {
     updated_at: doc.updated_at,
   };
 };
+

@@ -6,7 +6,7 @@ import {
   RAG_UPLOADS_ROOT,
 } from "../../../middleware/rag.upload.js";
 import { getUploadedText } from "../../../utils/errors/ingest-pdf.js";
-import { BadRequestError } from "../../../utils/errors/index.js";
+import { BadRequestError, NotFoundError } from "../../../utils/errors/index.js";
 import {
   createDocumentFromUploadService,
   deleteDocumentService,
@@ -14,7 +14,7 @@ import {
   queryDocumentService,
   listDocumentsForUserService,
   getDocumentMetaService,
-  assertOwnedDocument,// Added your service import back
+  assertOwnedDocument,
 } from "../service/rag.service.js";
 
 
@@ -160,10 +160,15 @@ export const queryDocumentController = async (req, res, next) => {
   }
 };
 
+/**
+ * Handles GET /api/rag/documents/:documentId
+ */
 export const getDocumentMetaController = async (req, res, next) => {
   try {
-    const documentId = Number(req.params.documentId);
-    const data = await getDocumentMetaService(documentId, req.user.id);
+    const data = await getDocumentMetaService(
+      Number(req.params.documentId),
+      req.user.id,
+    );
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -187,14 +192,22 @@ export const getDocumentFileController = async (req, res, next) => {
       throw err;
     }
     // 1. verify ownership + get document
-    const doc = await assertOwnedDocument(documentId, userId);
-    // 2. build absolute path
-    const absPath = path.join(RAG_UPLOADS_ROOT, doc.storage_path);
-    // 3. verify file exists
+    const doc = await assertOwnedDocument({ documentId, userId });
+    const absPath = path.resolve(RAG_UPLOADS_ROOT, doc.storage_path);
+
+    if (
+      absPath !== RAG_UPLOADS_ROOT &&
+      !absPath.startsWith(`${RAG_UPLOADS_ROOT}${path.sep}`)
+    ) {
+      throw new BadRequestError("Invalid document storage path.");
+    }
+
     try {
       await fs.access(absPath);
     } catch {
-      throw new Error("Document file not found.");
+      throw new NotFoundError(
+        "Document file not found on server. Delete this entry and upload the PDF again.",
+      );
     }
     // 4. headers
     res.setHeader("Content-Type", doc.mime_type || "application/pdf");
@@ -208,3 +221,4 @@ export const getDocumentFileController = async (req, res, next) => {
     next(error);
   }
 };
+

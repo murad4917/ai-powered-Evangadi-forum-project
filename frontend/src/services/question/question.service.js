@@ -31,7 +31,10 @@ async function getQuestions({ search, mine } = {}) {
     if (mine) params.mine = true;
 
     const response = await apiClient.get("/api/questions", { params });
-    return response.data.data ?? [];
+    return {
+      data: response.data.data ?? [],
+      meta: response.data.meta,
+    };
   } catch (error) {
     throw handleQuestionError(error);
   }

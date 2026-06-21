@@ -61,7 +61,7 @@ export default function MyQuestions() {
       setError(null);
       try {
         const result = await questionService.getQuestions({ mine: true });
-        setQuestions(result.data || []);
+        setQuestions(result?.data || result || []);
       } catch (err) {
         setError(err.message || 'Failed to fetch questions.');
         setQuestions([]);
