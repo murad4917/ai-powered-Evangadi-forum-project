@@ -20,7 +20,9 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { register, login } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(
+    () => location.state?.mode !== 'register',
+  );
 
   // Registration form state
   const [firstName, setFirstName] = useState('');
@@ -101,7 +103,6 @@ export default function Auth() {
         // Check location state for original URL after login
         // Redirect to original URL if present, otherwise dashboard
         const from = location.state?.from?.pathname || '/dashboard';
-        navigate(from, { replace: true });
         navigate(from, { replace: true });
       } else {
         // Registration flow

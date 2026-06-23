@@ -21,9 +21,18 @@ flowchart TD
 ```
 
 ## 3. API Integrations
-Uses `question.service.js`:
+The Post Question page uses `frontend/src/services/question/question.service.js`.
+
 - `generateQuestionDraftCoach({ title, content })` -> `POST /api/questions/draft-coach`
+  - Request body: `{ title, content }`
+  - Response shape: `{ success, message, data: { tips: string[] } }`
+  - Frontend uses `response.data.data.tips` to render the AI suggestions.
 - `createQuestion({ title, content })` -> `POST /api/questions`
+  - Request body: `{ title, content }`
+  - Response shape: `{ success, message, data: { id, questionHash, title, content, userId } }`
+  - Frontend uses `response.data.data` to redirect to the published question or confirm success.
+
+Both endpoints require the authenticated user's JWT token in the `Authorization: Bearer <token>` header.
 
 ## 4. Detailed Logic
 1. **State Management**:
