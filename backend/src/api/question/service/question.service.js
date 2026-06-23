@@ -1,7 +1,6 @@
 import crypto from "crypto";
 import { safeExecute } from "../../../../db/config.js";
 import { BadRequestError, NotFoundError } from "../../../utils/errors/index.js";
-import { StatusCodes } from "http-status-codes";
 
 import {
   normalizeQuestionText,
@@ -187,11 +186,63 @@ export const getQuestionsService = async (filters) => {
  * @returns {Promise<object>} - The question object with author details
  * @throws {BadRequestError} - If question is not found
  */
+// export const getSingleQuestionService = async (questionHash) => {
+//   const sql = `
+//         SELECT  
+//             q.question_id AS id,
+//             q.question_hash AS questionHash,
+//             q.title,
+//             q.content,
+//             q.created_at AS createdAt,
+//             q.updated_at AS updatedAt,
+//             u.user_id AS userId,
+//             u.first_name AS firstName,
+//             u.last_name AS lastName,
+//             COUNT(DISTINCT a.answer_id) AS answerCount
+//         FROM questions q
+//         JOIN users u ON q.user_id = u.user_id
+//         LEFT JOIN answers a ON q.question_id = a.question_id
+//         WHERE q.question_hash = ?
+//         GROUP BY 
+//             q.question_id,
+//             q.question_hash,
+//             q.title,
+//             q.content,
+//             q.created_at,
+//             q.updated_at,
+//             u.user_id,
+//             u.first_name,
+//             u.last_name
+//     `;
+//   const rows = await safeExecute(sql, [questionHash]);
+
+//   if (rows.length === 0) {
+//     throw new BadRequestError("Question not found");
+//   }
+
+//   const row = rows[0];
+//   return {
+//     id: row.id,
+//     questionHash: row.questionHash,
+//     title: row.title,
+//     content: row.content,
+//     answerCount: row.answerCount,
+//     createdAt: row.createdAt,
+//     updatedAt: row.updatedAt,
+//     author: {
+//       id: row.userId,
+//       firstName: row.firstName,
+//       lastName: row.lastName,
+//     },
+//   };
+// };
+
 export const getSingleQuestionService = async ({
   questionHash,
   includeAnswer = true,
 }) => {
   const normalizedAnswerLimit = 100; // Fixed max 100 records
+
 
   const questionSql = `
         SELECT
@@ -214,6 +265,7 @@ export const getSingleQuestionService = async ({
 
   const questionRows = await safeExecute(questionSql, [questionHash]);
 
+  //
   if (questionRows.length === 0) {
     throw new NotFoundError("Question not found");
   }
@@ -221,6 +273,7 @@ export const getSingleQuestionService = async ({
   const question = questionRows[0];
   const questionId = question.id;
 
+  // 2.
   if (!includeAnswer) {
     return {
       question: {
@@ -242,6 +295,7 @@ export const getSingleQuestionService = async ({
     };
   }
 
+  // 3.
   const answersSql = `
         SELECT 
             a.answer_id AS id,
@@ -258,11 +312,13 @@ export const getSingleQuestionService = async ({
         LIMIT ?
     `;
 
+  //
   const answers = await safeExecute(answersSql, [
     questionId,
     normalizedAnswerLimit,
   ]);
 
+  // 4.
   return {
     question: {
       id: question.id,
@@ -350,6 +406,7 @@ export const getSimilarQuestionsService = async ({
   k = 5,
   threshold,
 }) => {
+  // Find the source question by hash
   const sql = `SELECT question_id AS id, title FROM questions WHERE question_hash = ?`;
   const rows = await safeExecute(sql, [questionHash]);
   if (!rows || rows.length === 0) {
@@ -363,6 +420,7 @@ export const getSimilarQuestionsService = async ({
     sourceText,
     k,
     threshold,
+    // Exclude the source question itself so it never appears in its own recommendations.
     excludeQuestionId: question.id,
   });
 

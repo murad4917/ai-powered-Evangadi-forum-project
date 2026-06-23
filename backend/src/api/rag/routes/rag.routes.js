@@ -2,29 +2,55 @@ import express from "express";
 import { authenticateUser } from "../../../middleware/authentication.js";
 import { validationErrorHandler } from "../../../middleware/validation-handler.js";
 import {
-    createDocumentMulterErrorHandler,
-    handlePdfUpload,
+  createDocumentMulterErrorHandler,
+  handlePdfUpload,
 } from "../../../middleware/rag.upload.js";
 
 import {
-    documentIdParamValidation,
-    queryDocumentValidation,
-    getDocumentFileValidation,
-    documentIdValidation,
-    searchDocumentValidation,
+  documentIdParamValidation,
+  queryDocumentValidation,
+  getDocumentFileValidation,
+  documentIdValidation,
+  
 } from "../validation/rag.validation.js";
 
 import {
-    createDocumentController,
-    deleteDocumentController,
-    listDocumentsController,
-    queryDocumentController,
-    getDocumentMetaController,
-    getDocumentFileController,
-    searchInDocumentController,
+  createDocumentController,
+  deleteDocumentController,
+  listDocumentsController,
+  queryDocumentController,
+  getDocumentMetaController,
+  getDocumentFileController,
+  searchInDocumentController,
+  // getDocumentMetaController,
+  // getDocumentFileController,
 } from "../controller/rag.controller.js";
+// import {
+//   documentIdParamValidation,
+//   // documentIdValidation,
+//   // queryDocumentValidation,
+//   getDocumentFileValidation,
+// } from "../validation/rag.validation.js";
 
 const router = express.Router();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * @route POST /api/rag/documents
@@ -32,10 +58,10 @@ const router = express.Router();
  * @access Protected
  */
 router.post(
-    "/documents",
-    authenticateUser,
-    handlePdfUpload,
-    createDocumentController,
+  "/documents",
+  authenticateUser,
+  handlePdfUpload,
+  createDocumentController,
 );
 
 router.use(createDocumentMulterErrorHandler);
@@ -53,10 +79,9 @@ router.get("/documents", authenticateUser, listDocumentsController);
  * @access Protected
  */
 router.get(
-    "/documents/:documentId/search",
-    authenticateUser,
-    searchInDocumentController,
-    searchDocumentValidation,
+  "/documents/:documentId/search",
+  authenticateUser,
+  searchInDocumentController,
 );
 
 /**
@@ -65,10 +90,10 @@ router.get(
  * @access Protected
  */
 router.post(
-    "/documents/:documentId/query",
-    authenticateUser,
-    queryDocumentValidation,
-    queryDocumentController,
+  "/documents/:documentId/query",
+  authenticateUser,
+  queryDocumentValidation,
+  queryDocumentController,
 );
 
 /**
@@ -77,18 +102,24 @@ router.post(
  * @access Protected
  */
 router.get(
-    "/documents/:documentId/file",
-    authenticateUser,
-    getDocumentFileValidation,
-    getDocumentFileController,
+  "/documents/:documentId/file",
+  authenticateUser,
+  getDocumentFileValidation,
+  getDocumentFileController,
 );
 
 router.get(
-    "/documents/:documentId",
-    authenticateUser,
-    documentIdParamValidation,
-    validationErrorHandler,
-    getDocumentMetaController,
+  "/documents/:documentId",
+  authenticateUser,
+  documentIdParamValidation,
+  validationErrorHandler,
+  getDocumentMetaController,
+);
+router.get(
+  "/documents/:documentId/file",
+  authenticateUser,
+  getDocumentFileValidation,
+  getDocumentFileController,
 );
 
 /**
@@ -97,10 +128,10 @@ router.get(
  * @access Protected
  */
 router.delete(
-    "/documents/:documentId",
-    authenticateUser,
-    documentIdValidation,
-    deleteDocumentController,
+  "/documents/:documentId",
+  authenticateUser,
+  documentIdValidation,
+  deleteDocumentController,
 );
 
 export default router;

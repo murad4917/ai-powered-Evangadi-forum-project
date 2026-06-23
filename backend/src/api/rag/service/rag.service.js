@@ -167,27 +167,50 @@ async function updateDocumentStatus({
 
   await safeExecute(sql, [status, errorMessage, documentId]);
 }
-//
-export const assertOwnedDocument = async (documentId, userId) => {
+
+export const assertOwnedDocument = async ({
+  documentId,
+  userId,
+}) => {
   const rows = await safeExecute(
     `SELECT document_id, title, mime_type, storage_path
      FROM documents
      WHERE document_id = ? AND user_id = ?
      LIMIT 1`,
-    [documentId, userId],
+    [documentId, userId]
   );
+
   if (rows.length === 0) {
     throw new NotFoundError("Document not found.");
   }
+
   return rows[0];
 };
+
+
+
+//
+// export const assertOwnedDocument = async (documentId, userId) => {
+//   const rows = await safeExecute(
+//     `SELECT document_id, title, mime_type, storage_path
+//      FROM documents
+//      WHERE document_id = ? AND user_id = ?
+//      LIMIT 1`,
+//     [documentId, userId],
+//   );
+//   if (rows.length === 0) {
+//     throw new NotFoundError("Document not found.");
+//   }
+//   return rows[0];
+// };
 
 //
 // export async function assertOwnedDocument({ documentId, userId }) {
 //   const document = await fetchDocumentById(documentId);
-// if (!document || Number(document.user_id) !== Number(userId)) {
-//   throw new NotFoundError("Document not found");
-// }
+
+  // if (!document || Number(document.user_id) !== Number(userId)) {
+  //   throw new NotFoundError("Document not found");
+  // }
 
 //   return document;
 // }
@@ -564,13 +587,18 @@ export async function answerFromRagChunksService({ query, chunks }) {
         "Gemini API quota exceeded. Wait a minute and try again, or switch GEMINI_TEXT_MODEL in .env to a model your API key supports.",
       );
     }
+
     throw new ServiceUnavailableError(
       "Failed to generate an answer from the document. Please try again later.",
     );
   }
 }
 
-export async function queryDocumentService({ userId, documentId, query }) {
+export async function queryDocumentService({
+  userId,
+  documentId,
+  query,
+}) {
   const searchResult = await searchInDocumentService({
     userId,
     documentId,
@@ -578,7 +606,27 @@ export async function queryDocumentService({ userId, documentId, query }) {
     k: RAG_SEARCH_K,
   });
 
-  const answer = await answerFromRagChunksService({ query, chunks });
+  // const chunks = searchResult?.results ?? [];
+
+  const chunks = searchResult.results.map((result) => ({
+    chunkId: result.chunkId,
+    chunkIndex: result.chunkIndex,
+    content: result.excerpt,
+  }));
+
+  if (chunks.length === 0) {
+    return {
+      answer:
+        "I could not find this information in the PDF. Please ask a question related to the document.",
+      citations: [],
+      chunksUsed: [],
+    };
+  }
+
+  const answer = await answerFromRagChunksService({
+    query,
+    chunks,
+  });
 
   return {
     answer,
@@ -589,6 +637,30 @@ export async function queryDocumentService({ userId, documentId, query }) {
     chunksUsed: chunks.map((chunk) => chunk.chunkId),
   };
 }
+
+
+
+
+// export async function queryDocumentService({ userId, documentId, query }) {
+//   const searchResult = await searchInDocumentService({
+//     userId,
+//     documentId,
+//     query,
+//     k: RAG_SEARCH_K,
+//   });
+
+//   const chunks = searchResult.results;
+//   const answer = await answerFromRagChunksService({ query, chunks });
+
+//   return {
+//     answer,
+//     citations: chunks.map((chunk, index) => ({
+//       ref: index + 1,
+//       chunkIndex: chunk.chunkIndex,
+//     })),
+//     chunksUsed: chunks.map((chunk) => chunk.chunkId),
+//   };
+// }
 
 /**
  * Get metadata for a single document, but only if it belongs to this user.
