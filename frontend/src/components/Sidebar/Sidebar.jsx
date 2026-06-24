@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, LogOut, MessageSquare, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Sidebar.module.css';
+import ChatbotWidget from '../chatbot/ChatbotWidget.jsx';
 
 /**
  * Primary navigation: paths must match `App.jsx` routes.
@@ -76,6 +77,10 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+
+      <div className={styles.sidebar__chatbot}>
+        <ChatbotWidget />
+      </div>
 
       <div className={styles.sidebar__footer}>
         <button

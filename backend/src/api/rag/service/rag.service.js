@@ -507,17 +507,24 @@ export async function searchInDocumentService({
   });
 
   const chunks = await fetchDocumentChunksWithVectors(documentId);
+  const expectedDim = queryEmbedding.length;
 
-  const rankedResults = chunks.map((chunk) => {
-    const embedding = parseEmbedding(chunk.embedding);
+  const rankedResults = chunks
+    .map((chunk) => {
+      const embedding = parseEmbedding(chunk.embedding);
+      const len = Array.isArray(embedding) ? embedding.length : -1;
+      if (len !== expectedDim) {
+        return null;
+      }
 
-    return {
-      chunkId: chunk.chunk_id,
-      chunkIndex: chunk.chunk_index,
-      excerpt: chunk.content,
-      score: cosineSimilarity(queryEmbedding, embedding),
-    };
-  });
+      return {
+        chunkId: chunk.chunk_id,
+        chunkIndex: chunk.chunkIndex,
+        excerpt: chunk.content,
+        score: cosineSimilarity(queryEmbedding, embedding),
+      };
+    })
+    .filter((result) => result !== null);
 
   rankedResults.sort((a, b) => b.score - a.score);
   const topResults = rankedResults.slice(0, k);

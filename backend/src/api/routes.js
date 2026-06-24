@@ -3,6 +3,7 @@ import authRoutes from './auth/routes/auth.routes.js';
 import questionRoutes from './question/routes/question.routes.js';
 import answersRoutes from './answers/routes/answer.routes.js';
 import ragRoutes from "./rag/routes/rag.routes.js";
+import chatbotRoute from "./chatbot/routes/chatbotRoute.js"
 
 export const mainRouter = express.Router();
 
@@ -16,5 +17,8 @@ mainRouter.use("/answers", answersRoutes);
 
 // RAG document routes (upload, search, query, and document management)
 mainRouter.use("/rag", ragRoutes);
+
+//chatbot route
+mainRouter.use('/chatbot', chatbotRoute);
 
 
