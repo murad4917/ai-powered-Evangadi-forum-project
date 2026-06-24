@@ -227,9 +227,7 @@
   font-weight: 600;
   color: #1e293b;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.45;
 }
 
 .questionCard__yoursBadgeItem {
@@ -247,7 +245,7 @@
   font-size: 0.85rem;
   color: #64748b;
   line-height: 1.5;
-  margin: 0 0 0.75rem 0;
+  margin: 0.25rem 0 0.5rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -256,17 +254,12 @@
 }
 
 .questionCard__metaRow {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.questionCard__metaItemField {
-  display: flex;
-  align-items: center;
+  gap: 0.35rem;
   font-size: 0.775rem;
   color: #94a3b8;
+  line-height: 1.4;
 }
 
 /* ─── State Container Boxes ────────────────────────────────────────── */
