@@ -55,7 +55,8 @@
   text-align: left;
   gap: 1rem;
   padding: 1.25rem;
-  background-color: #f9fafb;
+  /* background-color: #f9fafb; */
+  background-color: #F0F4F8; 
   border: 1px solid #f3f4f6;
   border-radius: 8px;
   text-decoration: none;
@@ -63,7 +64,7 @@
 }
 
 .quickActionCard:hover {
-  background-color: #f3f4f6;
+  background-color: #f3f4f6; 
   border-color: #e5e7eb;
 }
 

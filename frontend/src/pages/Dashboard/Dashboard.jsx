@@ -26,6 +26,26 @@ const AVATAR_COLORS = [
   "#14b8a6",
   "#f59e0b",
 ];
+const QUICKACTIONS = [
+  {
+    icon: SquarePen,
+    title: "New question",
+    desc: "Share context, errors, and what you already tried",
+    to: "/questions/ask",
+  },
+  {
+    icon: Library,
+    title: "Your topics",
+    desc: "Filtered list of threads you authored",
+    to: "/my-questions",
+  },
+  {
+    icon: BookOpen,
+    title: "Knowledge base",
+    desc: "Course library, uploads, and retrieval-backed context for threads",
+    to: "/rag-documents",
+  },
+];
 
 function getAvatarColor(name = "") {
   let hash = 0;
@@ -122,26 +142,26 @@ export default function Dashboard() {
     ? `Good to see you, ${firstName}.`
     : "Welcome to the forum.";
 
-  const quickActions = [
-    {
-      icon: SquarePen,
-      title: "New question",
-      desc: "Share context, errors, and what you already tried",
-      to: "/questions/ask",
-    },
-    {
-      icon: Library,
-      title: "Your topics",
-      desc: "Filtered list of threads you authored",
-      to: "/my-questions",
-    },
-    {
-      icon: BookOpen,
-      title: "Knowledge base",
-      desc: "Course library, uploads, and retrieval-backed context for threads",
-      to: "/rag-documents",
-    },
-  ];
+  // const quickActions = [
+  //   {
+  //     icon: SquarePen,
+  //     title: "New question",
+  //     desc: "Share context, errors, and what you already tried",
+  //     to: "/questions/ask",
+  //   },
+  //   {
+  //     icon: Library,
+  //     title: "Your topics",
+  //     desc: "Filtered list of threads you authored",
+  //     to: "/my-questions",
+  //   },
+  //   {
+  //     icon: BookOpen,
+  //     title: "Knowledge base",
+  //     desc: "Course library, uploads, and retrieval-backed context for threads",
+  //     to: "/rag-documents",
+  //   },
+  // ];
 
   return (
     <div className={styles.dashboard}>
@@ -155,7 +175,7 @@ export default function Dashboard() {
         </p>
 
         <div className={styles.quickActionsGrid}>
-          {quickActions.map((action) => (
+          {QUICKACTIONS.map((action) => (
             <Link
               key={action.to}
               to={action.to}
@@ -299,10 +319,15 @@ export default function Dashboard() {
                       )}
 
                       <div className={styles.questionCard__metaRow}>
-                        <MessageSquare size={13} strokeWidth={1.75} aria-hidden />
+                        <MessageSquare
+                          size={13}
+                          strokeWidth={1.75}
+                          aria-hidden
+                        />
                         <span>
-                          {Number(q.answerCount) || 0} replies · {timeAgo(q.createdAt)} · by{' '}
-                          {(authorName || 'unknown').toLowerCase()}
+                          {Number(q.answerCount) || 0} replies ·{" "}
+                          {timeAgo(q.createdAt)} · by{" "}
+                          {(authorName || "unknown").toLowerCase()}
                         </span>
                       </div>
                     </div>

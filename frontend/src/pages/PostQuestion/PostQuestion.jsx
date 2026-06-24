@@ -92,7 +92,15 @@ export default function PostQuestion() {
     //   link: ["[", "](url)"], // Standard Markdown link
     // };
 
-     const wrappers = {
+//     const wrappers = {
+    // const wrappers = {
+    //   bold: ["**", "**"], // Standard Markdown bold
+    //   italic: ["*", "*"], // Standard Markdown italics
+    //   code: ["`", "`"], // Standard Markdown inline code
+    //   link: ["[", "](url)"], // Standard Markdown link
+    // };
+
+    const wrappers = {
       bold: ["**", "**"],
       italic: ["*", "*"],
       code: ["\n```\n", "\n```\n"],
