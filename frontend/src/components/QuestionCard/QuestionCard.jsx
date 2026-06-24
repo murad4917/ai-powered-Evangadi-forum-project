@@ -31,9 +31,6 @@ function getAvatarUrl(author) {
  * Shared question row used on Home and Your Topics.
  */
 export default function QuestionCard({ question, currentUser, showYoursBadge = false }) {
-  const replyLabel =
-    question.answerCount === 1 ? '1 reply' : `${question.answerCount ?? 0} replies`;
-
   return (
     <Link
       to={`/question/${question.questionHash}`}
@@ -64,12 +61,10 @@ export default function QuestionCard({ question, currentUser, showYoursBadge = f
         ) : null}
 
         <div className={styles.card__meta}>
-          <span className={styles.card__metaItem}>
-            <MessageSquare size={14} aria-hidden />
-            {replyLabel}
-          </span>
+          <MessageSquare size={13} strokeWidth={1.75} aria-hidden />
           <span>
-            {timeAgo(question.createdAt)} by {getAuthorLabel(question, currentUser)}
+            {question.answerCount ?? 0} replies · {timeAgo(question.createdAt)} · by{' '}
+            {getAuthorLabel(question, currentUser).toLowerCase()}
           </span>
         </div>
       </div>

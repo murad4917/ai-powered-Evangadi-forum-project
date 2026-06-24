@@ -121,16 +121,10 @@
 }
 
 .card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-
-.card__metaItem {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  font-size: var(--text-xs);
+  color: #94a3b8;
+  line-height: 1.4;
 }

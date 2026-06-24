@@ -1,7 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import { safeExecute } from "../../../../db/config.js";
 
-import { BadRequestError, NotFoundError } from "../../../utils/errors/index.js";
+import {
+  BadRequestError,
+  NotFoundError,
+  ServiceUnavailableError,
+} from "../../../utils/errors/index.js";
 
 const GEMINI_EMBEDDING_MODEL =
   process.env.GEMINI_EMBEDDING_MODEL || "text-embedding-004";

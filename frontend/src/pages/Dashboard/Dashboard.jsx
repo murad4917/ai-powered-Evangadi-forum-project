@@ -9,7 +9,6 @@ import {
   Library, // Layered/Structured "Your Topics" icon
   BookOpen, // True textbook/library "Knowledge Base" icon
   MessageSquare,
-  Clock,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { questionService } from "../../services/question/question.service";
@@ -300,25 +299,10 @@ export default function Dashboard() {
                       )}
 
                       <div className={styles.questionCard__metaRow}>
-                        <span className={styles.questionCard__metaItemField}>
-                          <MessageSquare
-                            size={13}
-                            style={{ marginRight: "4px" }}
-                          />
-                          {Number(q.answerCount) || 0}{" "}
-                          {Number(q.answerCount) === 1 ? "reply" : "replies"}
-                        </span>
-                        <span className={styles.questionCard__metaItemField}>
-                          <Clock size={13} style={{ marginRight: "4px" }} />
-                          {timeAgo(q.createdAt)}
-                        </span>
-                        <span className={styles.questionCard__metaItemField}>
-                          by{" "}
-                          <strong
-                            style={{ fontWeight: "500", color: "#475569" }}
-                          >
-                            {authorName || "Unknown"}
-                          </strong>
+                        <MessageSquare size={13} strokeWidth={1.75} aria-hidden />
+                        <span>
+                          {Number(q.answerCount) || 0} replies · {timeAgo(q.createdAt)} · by{' '}
+                          {(authorName || 'unknown').toLowerCase()}
                         </span>
                       </div>
                     </div>

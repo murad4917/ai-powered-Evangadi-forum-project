@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageSquare, Clock, Plus } from 'lucide-react';
+import { MessageSquare, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { questionService } from '../../services/question/question.service';
 import styles from './MyQuestions.module.css';
@@ -152,16 +152,10 @@ export default function MyQuestions() {
                 {q.content && <p className={styles.questionCard__excerpt}>{q.content}</p>}
 
                 <div className={styles.questionCard__meta}>
-                  <span className={styles.questionCard__metaItem}>
-                    <MessageSquare size={12} />
-                    {Number(q.answerCount) || 0}{' '}
-                    {Number(q.answerCount) === 1 ? 'reply' : 'replies'}
+                  <MessageSquare size={13} strokeWidth={1.75} aria-hidden />
+                  <span>
+                    {Number(q.answerCount) || 0} replies · {timeAgo(q.createdAt)} · by you
                   </span>
-                  <span className={styles.questionCard__metaItem}>
-                    <Clock size={12} />
-                    {timeAgo(q.createdAt)}
-                  </span>
-                  <span className={styles.questionCard__metaItem}>by You</span>
                 </div>
               </div>
             </Link>

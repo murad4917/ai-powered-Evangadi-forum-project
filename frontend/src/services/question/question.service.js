@@ -127,6 +127,30 @@ async function assessAnswerFit(questionHash, answerText) {
 }
 
 /**
+ * Semantic (AI) search across forum questions by natural-language query.
+ * @param {string} query
+ * @param {{ k?: number, threshold?: number }} [options]
+ * @returns {Promise<{ data: Array, meta?: object }>}
+ */
+async function searchQuestionsSemantic(query, { k, threshold } = {}) {
+  try {
+    const params = { query: query.trim() };
+
+    if (k !== undefined) params.k = k;
+    if (threshold !== undefined) params.threshold = threshold;
+
+    const response = await apiClient.get("/api/questions/search", { params });
+
+    return {
+      data: response.data.data ?? [],
+      meta: response.data.meta,
+    };
+  } catch (error) {
+    throw handleQuestionError(error);
+  }
+}
+
+/**
  * Fetches semantically similar questions for the sidebar.
  * @param {string} questionHash
  * @returns {Promise<Array>}
@@ -144,6 +168,7 @@ async function getSimilarQuestions(questionHash) {
 
 export const questionService = {
   getQuestions,
+  searchQuestionsSemantic,
   createQuestion,
   generateQuestionDraftCoach,
   getSingleQuestion,
