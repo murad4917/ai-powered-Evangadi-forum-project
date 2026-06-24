@@ -32,7 +32,7 @@ export const createQuestionController = async (req, res, next) => {
 export const getSingleQuestionController = async (req, res, next) => {
   try {
     const { questionHash } = req.params;
-    
+
     const result = await getSingleQuestionService({
       questionHash,
     });
@@ -143,7 +143,7 @@ export const assessAnswerAgainstQuestionController = async (req, res, next) => {
     const { questionHash } = req.params;
     const { answerText } = req.body;
 
-    const question = await getSingleQuestionService(questionHash);
+    const question = await getSingleQuestionService({ questionHash });
 
     const data = await assessAnswerAgainstQuestionService({
       questionTitle: question.title,

@@ -85,11 +85,24 @@ export default function PostQuestion() {
     const textarea = contentRef.current;
     if (!textarea) return;
 
+    // const wrappers = {
+    //   bold: ["**", "**"],
+    //   italic: ["*", "*"],
+    //   code: ["`", "`"],
+    //   link: ["[", "](url)"],
+    // };
+    // const wrappers = {
+    //   bold: ["*", "*"],
+    //   italic: ["", ""],
+    //   code: ["`\`", "`\`"],
+    //   link: ["[", "](url)"],
+    // };
+
     const wrappers = {
-      bold: ["**", "**"],
-      italic: ["*", "*"],
-      code: ["`", "`"],
-      link: ["[", "](url)"],
+      bold: ["**", "**"], // Standard Markdown bold
+      italic: ["*", "*"], // Standard Markdown italics
+      code: ["`", "`"], // Standard Markdown inline code
+      link: ["[", "](url)"], // Standard Markdown link
     };
 
     const [before, after] = wrappers[format];

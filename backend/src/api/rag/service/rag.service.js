@@ -208,9 +208,9 @@ export const assertOwnedDocument = async ({
 // export async function assertOwnedDocument({ documentId, userId }) {
 //   const document = await fetchDocumentById(documentId);
 
-  // if (!document || Number(document.user_id) !== Number(userId)) {
-  //   throw new NotFoundError("Document not found");
-  // }
+// if (!document || Number(document.user_id) !== Number(userId)) {
+//   throw new NotFoundError("Document not found");
+// }
 
 //   return document;
 // }
@@ -367,7 +367,7 @@ export async function createDocumentFromUploadService({
 }
 
 export async function deleteDocumentService({ userId, documentId }) {
-  const document = await assertOwnedDocument(documentId, userId);
+  const document = await assertOwnedDocument({ documentId, userId });
   const absolutePath = resolveOwnedDocumentPath(document.storage_path);
 
   try {
