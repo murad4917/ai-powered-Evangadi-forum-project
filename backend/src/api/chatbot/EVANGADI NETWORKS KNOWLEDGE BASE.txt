@@ -1,0 +1,166 @@
+EVANGADI NETWORKS KNOWLEDGE BASE
+
+ABOUT EVANGADI
+
+Evangadi Networks is an educational and technology organization focused on empowering underserved communities through technology education, software development training, scholarships, tutoring, and workforce development programs.
+
+MISSION
+
+Evangadi's mission is to create opportunities through education and technology by training individuals with practical software development skills and connecting them with employment opportunities.
+
+VISION
+
+Evangadi believes education and technology can reduce inequality and create economic opportunities for individuals and communities.
+
+CORE AREAS
+
+1. Full-Stack Software Development Training
+2. Online Tutoring
+3. Scholarship Programs
+4. Workforce Development
+5. Software Engineering Talent Development
+6. Community Empowerment
+
+FULL-STACK DEVELOPMENT PROGRAM
+
+The Evangadi Full-Stack Development Program is an intensive training program designed to prepare students for software engineering careers.
+
+Program Features:
+
+* Full-stack web development training
+* Project-based learning
+* Practical software engineering experience
+* Soft skills development
+* Industry-focused curriculum
+* Career preparation
+
+Topics Covered:
+
+* HTML
+* CSS
+* JavaScript
+* React
+* Node.js
+* Express.js
+* Databases
+* API Development
+* Git and GitHub
+* Full-Stack Application Development
+
+EVANGADI METHODOLOGY
+
+Evangadi uses a project-based learning approach.
+
+The program focuses on:
+
+* Practical skills
+* Real-world projects
+* Team collaboration
+* Problem-solving
+* Professional communication
+* Career readiness
+
+SCHOLARSHIP PROGRAM
+
+Evangadi provides scholarships to students from underserved communities.
+
+Scholarship Goals:
+
+* Remove financial barriers
+* Increase access to technology education
+* Support talented students
+* Promote equal opportunities
+
+TUTORING SERVICES
+
+Evangadi provides online tutoring services for students.
+
+Subjects Include:
+
+* Mathematics
+* English
+* Science
+* Social Studies
+* Test Preparation
+* Homework Assistance
+* Coding
+
+Tutoring Features:
+
+* One-on-one sessions
+* Personalized learning plans
+* Flexible scheduling
+* Online delivery
+
+EMPLOYMENT AND TALENT DEVELOPMENT
+
+Evangadi helps organizations access trained software developers.
+
+The organization trains developers and prepares them for industry employment through practical experience and mentorship.
+
+FREQUENTLY ASKED QUESTIONS
+
+Q: What is Evangadi?
+A: Evangadi is an organization focused on technology education, tutoring, workforce development, and community empowerment.
+
+Q: What does Evangadi teach?
+A: Evangadi teaches software development, coding, full-stack web development, and related technical skills.
+
+Q: Who can join Evangadi programs?
+A: Students, graduates, career changers, and individuals interested in technology careers can apply depending on program requirements.
+
+Q: Does Evangadi offer scholarships?
+A: Yes. Evangadi offers scholarship opportunities to qualified students from underserved communities.
+
+Q: Does Evangadi provide tutoring?
+A: Yes. Evangadi provides online tutoring in various academic subjects and coding.
+
+Q: What programming skills can students learn?
+A: Students can learn front-end and back-end web development technologies used in modern software engineering.
+
+Q: Is the training practical?
+A: Yes. Evangadi emphasizes hands-on projects and practical learning experiences.
+
+Q: What is full-stack development?
+A: Full-stack development involves building both the front-end and back-end parts of web applications.
+
+Q: What career paths can the program support?
+A: Software Developer, Full-Stack Developer, Front-End Developer, Back-End Developer, Web Developer, QA Engineer, and related technology careers.
+
+CHATBOT RESPONSE RULES
+
+When users ask about Evangadi:
+
+1. Answer based only on the information in this knowledge base.
+2. Be concise and professional.
+3. If information is unavailable, respond:
+   "I do not have enough information in my knowledge base to answer that question."
+4. Encourage users to visit the official Evangadi website for the latest information.
+5. Do not invent tuition fees, schedules, or admission requirements unless explicitly provided in the knowledge base.
+
+SAMPLE QUESTIONS
+
+User: What is Evangadi?
+
+Assistant:
+Evangadi is an organization focused on technology education, software development training, tutoring, scholarships, and workforce development programs.
+
+User: What does Evangadi teach?
+
+Assistant:
+Evangadi teaches full-stack software development, including front-end and back-end web technologies, through practical and project-based learning.
+
+User: Does Evangadi provide scholarships?
+
+Assistant:
+Yes. Evangadi offers scholarship opportunities to help students from underserved communities gain access to technology education.
+
+User: What subjects are available through tutoring?
+
+Assistant:
+Tutoring support includes Mathematics, English, Science, Social Studies, Test Preparation, Homework Assistance, and Coding.
+
+User: Can Evangadi help me become a software developer?
+
+Assistant:
+Yes. Evangadi's full-stack development training is designed to prepare learners for careers in software development and related technology fields.

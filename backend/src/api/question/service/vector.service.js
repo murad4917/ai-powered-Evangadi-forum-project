@@ -210,10 +210,22 @@ export async function findSimilarQuestionsByText({
     throw error;
   }
 
+  const expectedDim = queryEmbeddingVector.length;
+  const validEmbeddings = storedEmbeddings.filter((item) => {
+    const len = Array.isArray(item.embedding) ? item.embedding.length : -1;
+    return len === expectedDim;
+  });
+
+  if (validEmbeddings.length !== storedEmbeddings.length) {
+    console.warn(
+      `Skipping ${storedEmbeddings.length - validEmbeddings.length} embeddings with dimension mismatch (expected ${expectedDim}).`,
+    );
+  }
+
   // Calculate cosine similarity for each stored embedding
   const similarities = [];
 
-  for (const stored of storedEmbeddings) {
+  for (const stored of validEmbeddings) {
     // Skip the source question so the endpoint never recommends the same question back to itself.
     if (
       excludeQuestionId !== undefined &&

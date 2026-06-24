@@ -344,3 +344,10 @@
     color: rgb(239, 68, 68);
     /* text-red-500 */
 }
+
+/* Element: sidebar__chatbot - Chatbot widget container in sidebar */
+.sidebar__chatbot {
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+}

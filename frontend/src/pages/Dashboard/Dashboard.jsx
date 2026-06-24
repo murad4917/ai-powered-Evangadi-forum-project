@@ -334,10 +334,10 @@ export default function Dashboard() {
                   </Link>
                 );
               })}
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
-  );
+</div>
+           )}
+         </div>
+       </section>
+     </div>
+   );
 }

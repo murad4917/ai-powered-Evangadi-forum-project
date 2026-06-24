@@ -132,3 +132,18 @@ CREATE TABLE `document_chunk_vectors` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+- -----------------------------------------------------------------------------
+-- 6. Chatbot: Evangadi knowledge base chunks and embeddings
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `chatbot_chunks`;
+CREATE TABLE `chatbot_chunks` (
+    `chunk_id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `chunk_index` INT NOT NULL,
+    `content` TEXT NOT NULL,
+    `embedding` JSON NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uniq_chatbot_chunks_index` (`chunk_index`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
