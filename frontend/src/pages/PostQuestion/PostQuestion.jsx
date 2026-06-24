@@ -98,11 +98,18 @@ export default function PostQuestion() {
     //   link: ["[", "](url)"],
     // };
 
+    // const wrappers = {
+    //   bold: ["**", "**"], // Standard Markdown bold
+    //   italic: ["*", "*"], // Standard Markdown italics
+    //   code: ["`", "`"], // Standard Markdown inline code
+    //   link: ["[", "](url)"], // Standard Markdown link
+    // };
+
     const wrappers = {
-      bold: ["**", "**"], // Standard Markdown bold
-      italic: ["*", "*"], // Standard Markdown italics
-      code: ["`", "`"], // Standard Markdown inline code
-      link: ["[", "](url)"], // Standard Markdown link
+      bold: ["**", "**"],
+      italic: ["*", "*"],
+      code: ["\n```\n", "\n```\n"],
+      link: ["[", "](url)"],
     };
 
     const [before, after] = wrappers[format];
