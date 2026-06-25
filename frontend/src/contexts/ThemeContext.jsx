@@ -10,13 +10,13 @@ const ThemeContext = createContext(undefined);
  */
 export function ThemeProvider({ children }) {
   const [darkMode, setDarkMode] = useState(() => {
-    // Initialize from localStorage or system preference
+    // Initialize from localStorage, default to light mode (white theme)
     const stored = localStorage.getItem("darkMode");
     if (stored !== null) {
       return stored === "true";
     }
-    // Check system preference
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // Default to light mode (false = white theme)
+    return false;
   });
 
   // Apply theme to document root

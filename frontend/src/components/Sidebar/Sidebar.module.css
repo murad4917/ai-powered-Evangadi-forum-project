@@ -109,6 +109,19 @@
     color: var(--text-placeholder);
 }
 
+:global(.dark-mode) .sidebar {
+    border-color: var(--border);
+}
+
+:global(.dark-mode) .sidebar,
+:global(.dark-mode) .sidebar * {
+    color: var(--text-primary) !important;
+}
+
+:global(.dark-mode) .sidebar__logo-icon {
+    color: var(--text-inverse) !important;
+}
+
 /* Element: sidebar__nav */
 .sidebar__nav {
     flex: 1;
