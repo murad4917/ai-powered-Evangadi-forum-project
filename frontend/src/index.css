@@ -239,6 +239,10 @@ h6 {
   --primary-dark: #e68a1a; /* Darker orange */
   --primary-container: #ff9f43;
 
+  /* Tertiary colors (dark mode) */
+  --tertiary: #ffffff; /* White headings in dark mode */
+  --tertiary-container: #d1d5db; /* Light gray for containers */
+
   /* Surface colors (dark mode) */
   --surface: #1f2937; /* Dark gray background */
   --surface-hover: #2d3748; /* Slightly lighter gray */
@@ -288,11 +292,48 @@ h6 {
   color: var(--text-primary);
 }
 
+/* Keep dashboard text BLACK in dark mode */
+.dark-mode .hero__title,
+.dark-mode .hero__subtitle,
+.dark-mode .quickAction__textBox h4,
+.dark-mode .quickAction__textBox p,
+.dark-mode .statCard__label,
+.dark-mode .statCard__value,
+.dark-mode .feed__headerLeft h3,
+.dark-mode .feed__headerLeft p,
+.dark-mode .questionCard__titleText,
+.dark-mode .questionCard__excerptText,
+.dark-mode .statsIntro,
+.dark-mode .loadingSnapshotText {
+  color: inherit !important;
+}
+
 .dark-mode .sidebar,
 .dark-mode .sidebar * {
   color: var(--text-primary) !important;
-  background-color: transparent !important;
 }
+
+/* Landing page dark mode text colors */
+.dark-mode .landing__brandName,
+.dark-mode .landing__title,
+.dark-mode .landing__titleAccent {
+  color: #ffffff !important;
+}
+
+.dark-mode .landing__lead,
+.dark-mode .landing__leadStrong,
+.dark-mode .landing__sectionTitle {
+  color: #ffffff !important;
+}
+
+.dark-mode .landing__navLink,
+.dark-mode .landing__eyebrow,
+.dark-mode .landing p,
+.dark-mode .landing span {
+  color: var(--text-primary) !important;
+}
+
+/* Remove global heading color override for dark mode - let CSS modules handle it */
 
 .dark-mode input,
 .dark-mode textarea,
