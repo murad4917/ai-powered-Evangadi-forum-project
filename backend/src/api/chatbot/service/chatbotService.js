@@ -116,8 +116,8 @@ function getGeneratedText(response) {
     if (typeof txt === "string" && txt.trim()) {
       return txt.trim();
     }
-  } catch {
-    // fall through
+  } catch (err) {
+    console.error("[Chatbot] failed to read response.text:", err);
   }
 
   const parts = response.candidates?.[0]?.content?.parts || [];
@@ -202,11 +202,32 @@ export async function ingestKnowledgeBaseService({ force = false } = {}) {
     );
   }
 
+  return ingestKnowledgeBaseFromTextService({ text: rawText, force });
+}
 
-  const chunks = chunkKnowledgeBaseText(rawText);
+export async function ingestKnowledgeBaseFromTextService({
+  text,
+  force = false,
+}) {
+  if (!text || typeof text !== "string") {
+    throw new ServiceUnavailableError(
+      "Uploaded knowledge base text is empty or invalid.",
+    );
+  }
+
+  const existing = await countStoredChunks();
+  if (existing > 0 && !force) {
+    return {
+      skipped: true,
+      chunkCount: existing,
+      message: "Knowledge base already ingested.",
+    };
+  }
+
+  const chunks = chunkKnowledgeBaseText(text);
   if (chunks.length === 0) {
     throw new ServiceUnavailableError(
-      "Knowledge base file did not contain ingestible text.",
+      "Knowledge base text did not contain ingestible text.",
     );
   }
 
@@ -215,12 +236,10 @@ export async function ingestKnowledgeBaseService({ force = false } = {}) {
   }
 
   for (let i = 0; i < chunks.length; i++) {
-    // embedText returns a numeric[] directly
     const embedding = await embedText(chunks[i], "RETRIEVAL_DOCUMENT");
 
-    // Never insert NULL into chatbot_chunks.embedding (JSON NOT NULL)
     if (!Array.isArray(embedding) || embedding.length === 0) {
-      console.warn(`[Chatbot] skipping chunk ${i}: invalid embedding`);
+      console.warn(`[Chatbot-upload] skipping chunk ${i}: invalid embedding`);
       continue;
     }
 
@@ -231,32 +250,57 @@ export async function ingestKnowledgeBaseService({ force = false } = {}) {
     });
   }
 
-
   return {
     skipped: false,
     chunkCount: chunks.length,
-    message: "Knowledge base ingested successfully.",
+    message: "Knowledge base uploaded + ingested successfully.",
   };
 }
 
+
 async function searchKnowledgeBase(query, k = CHATBOT_SEARCH_K) {
-  const { embedding: queryEmbedding } = await embedText(query, "RETRIEVAL_QUERY");
+  const queryEmbedding = await embedText(query, "RETRIEVAL_QUERY");
 
   const stored = await fetchAllChunksWithEmbeddings();
 
   const ranked = stored
-    .map((row) => ({
-      chunkId: row.chunk_id,
-      chunkIndex: row.chunk_index,
-      content: row.content,
-      score: cosineSimilarity(
-        queryEmbedding,
-        parseEmbedding(row.embedding),
-      ),
-    }))
+    .map((row) => {
+      const emb = parseEmbedding(row.embedding);
+      if (!Array.isArray(emb) || emb.length !== queryEmbedding.length) {
+        return null;
+      }
+      return {
+        chunkId: row.chunk_id,
+        chunkIndex: row.chunk_index,
+        content: row.content,
+        score: cosineSimilarity(queryEmbedding, emb),
+      };
+    })
+    .filter(Boolean)
     .sort((a, b) => b.score - a.score);
 
   return ranked.slice(0, k);
+}
+
+const RETRYABLE_ERRORS = ["429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"];
+
+async function callGeminiWithRetry(fn, attempts = 2) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const message = String(error?.message ?? error);
+      if (
+        i < attempts - 1 &&
+        RETRYABLE_ERRORS.some((code) => message.includes(code))
+      ) {
+        const delayMs = Math.max(1500, 16 * 1000);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        continue;
+      }
+      throw error;
+    }
+  }
 }
 
 export async function queryChatbotService({ message, history = [] }) {
@@ -284,12 +328,38 @@ export async function queryChatbotService({ message, history = [] }) {
 
   const prompt = buildChatbotPrompt({ question, chunks, history });
 
+  let response;
   try {
-    const response = await ai.models.generateContent({
-      model: GEMINI_GENERATION_MODEL,
-      contents: prompt,
-    });
+    response = await callGeminiWithRetry(() =>
+      ai.models.generateContent({
+        model: GEMINI_GENERATION_MODEL,
+        contents: [prompt],
+      }),
+    );
+  } catch (error) {
+    console.error(
+      `[Chatbot] query failed (model=${GEMINI_GENERATION_MODEL}):`,
+      error?.message ?? error,
+    );
 
+    const errorText = String(error?.message ?? error);
+    if (
+      errorText.includes("429") ||
+      errorText.includes("RESOURCE_EXHAUSTED") ||
+      errorText.includes("503") ||
+      errorText.includes("UNAVAILABLE")
+    ) {
+      throw new ServiceUnavailableError(
+        "AI service is busy. Please wait a moment and try again.",
+      );
+    }
+
+    throw new ServiceUnavailableError(
+      "Failed to generate a chatbot response. Please try again later.",
+    );
+  }
+
+  try {
     const answer = getGeneratedText(response);
     if (!answer) {
       throw new Error("Gemini response did not include answer text.");
@@ -310,7 +380,12 @@ export async function queryChatbotService({ message, history = [] }) {
     );
 
     const errorText = String(error?.message ?? error);
-    if (errorText.includes("429") || errorText.includes("RESOURCE_EXHAUSTED")) {
+    if (
+      errorText.includes("429") ||
+      errorText.includes("RESOURCE_EXHAUSTED") ||
+      errorText.includes("503") ||
+      errorText.includes("UNAVAILABLE")
+    ) {
       throw new ServiceUnavailableError(
         "AI service is busy. Please wait a moment and try again.",
       );
