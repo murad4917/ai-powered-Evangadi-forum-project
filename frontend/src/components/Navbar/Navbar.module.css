@@ -209,3 +209,45 @@
   outline: none;
   box-shadow: var(--shadow-focus);
 }
+
+.navbar__themeToggle {
+  position: relative;
+  padding: 0.5rem;
+  color: var(--text-secondary);
+  transition: var(--transition-base);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+}
+
+.navbar__themeToggle:hover {
+  color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.navbar__themeToggle:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.navbar__settings {
+  position: relative;
+  padding: 0.5rem;
+  color: var(--text-secondary);
+  transition: var(--transition-base);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+}
+
+.navbar__settings:hover {
+  color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.navbar__settings:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}

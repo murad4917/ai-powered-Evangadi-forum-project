@@ -101,6 +101,85 @@ function handleAuthError(error) {
 }
 
 /**
+ * Changes the user's password.
+ * @param {string} oldPassword - The current password.
+ * @param {string} newPassword - The new password.
+ */
+async function changePassword(oldPassword, newPassword) {
+  try {
+    const response = await apiClient.post('/api/auth/change-password', {
+      oldPassword,
+      newPassword,
+    });
+    return response.data;
+  } catch (error) {
+    throw handleAuthError(error);
+  }
+}
+
+/**
+ * Uploads a profile picture for the user.
+ * @param {File} file - The image file to upload.
+ */
+async function uploadProfilePicture(file) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post(
+      '/api/auth/upload-profile-picture',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw handleAuthError(error);
+  }
+}
+
+/**
+ * Updates the user profile name fields.
+ * @param {Object} profile - { firstName, lastName }
+ */
+async function updateProfile(profile) {
+  try {
+    const response = await apiClient.put('/api/auth/profile', profile);
+    return response.data;
+  } catch (error) {
+    throw handleAuthError(error);
+  }
+}
+
+/**
+ * Updates user preferences.
+ * @param {Object} preferences - User preferences (e.g., { darkMode: true })
+ */
+async function updatePreferences(preferences) {
+  try {
+    const response = await apiClient.put('/api/auth/preferences', preferences);
+    return response.data;
+  } catch (error) {
+    throw handleAuthError(error);
+  }
+}
+
+/**
+ * Gets the current user's profile.
+ */
+async function getUserProfile() {
+  try {
+    const response = await apiClient.get('/api/auth/profile');
+    return response.data;
+  } catch (error) {
+    throw handleAuthError(error);
+  }
+}
+
+/**
  * Service for handling auth-related requests.
  */
 export const authService = {
@@ -110,4 +189,9 @@ export const authService = {
   getStoredToken,
   getStoredUser,
   isAuthenticated,
+  changePassword,
+  uploadProfilePicture,
+  updateProfile,
+  updatePreferences,
+  getUserProfile,
 };

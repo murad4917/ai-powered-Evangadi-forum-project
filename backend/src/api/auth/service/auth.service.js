@@ -90,7 +90,7 @@ export const registerService = async ({
 export const loginService = async ({ email, password }) => {
   const normalizedEmail = normalizeEmail(email);
   const sql =
-    'SELECT user_id, first_name, last_name, email, password_hash FROM users WHERE email = ? LIMIT 1';
+    'SELECT user_id, first_name, last_name, email, password_hash, profile_picture_path, dark_mode FROM users WHERE email = ? LIMIT 1';
   const rows = await safeExecute(sql, [normalizedEmail]);
 
   if (rows.length === 0) {
@@ -118,7 +118,117 @@ export const loginService = async ({ email, password }) => {
       firstName: user.first_name,
       lastName: user.last_name,
       email: user.email,
+      profilePictureUrl: user.profile_picture_path,
+      darkMode: user.dark_mode,
     },
     token,
+  };
+};
+
+/**
+ * Changes user password.
+ *
+ * @param {number} userId - The user ID.
+ * @param {string} oldPassword - The user's current password.
+ * @param {string} newPassword - The new password.
+ * @returns {Promise<Object>} Success message.
+ * @throws {UnauthenticatedError} If old password doesn't match.
+ */
+export const changePasswordService = async (userId, oldPassword, newPassword) => {
+  const sql =
+    'SELECT password_hash FROM users WHERE user_id = ? LIMIT 1';
+  const rows = await safeExecute(sql, [userId]);
+
+  if (rows.length === 0) {
+    throw new UnauthenticatedError('User not found');
+  }
+
+  const user = rows[0];
+  const isMatch = await bcrypt.compare(oldPassword, user.password_hash);
+
+  if (!isMatch) {
+    throw new UnauthenticatedError('Current password is incorrect');
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  const updateSql = 'UPDATE users SET password_hash = ? WHERE user_id = ?';
+  await safeExecute(updateSql, [hashedPassword, userId]);
+
+  return { success: true, message: 'Password changed successfully' };
+};
+
+/**
+ * Gets user profile information.
+ *
+ * @param {number} userId - The user ID.
+ * @returns {Promise<Object>} The user profile object.
+ */
+export const getUserProfileService = async (userId) => {
+  const sql =
+    'SELECT user_id, first_name, last_name, email, profile_picture_path, dark_mode FROM users WHERE user_id = ? LIMIT 1';
+  const rows = await safeExecute(sql, [userId]);
+
+  if (rows.length === 0) {
+    throw new BadRequestError('User not found');
+  }
+
+  const user = rows[0];
+  return {
+    id: user.user_id,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    email: user.email,
+    profilePictureUrl: user.profile_picture_path,
+    darkMode: user.dark_mode,
+  };
+};
+
+/**
+ * Updates user preferences (dark mode).
+ *
+ * @param {number} userId - The user ID.
+ * @param {boolean} darkMode - Dark mode preference.
+ * @returns {Promise<Object>} Updated user object.
+ */
+export const updateUserPreferencesService = async (userId, darkMode) => {
+  const sql = 'UPDATE users SET dark_mode = ? WHERE user_id = ?';
+  await safeExecute(sql, [darkMode ? 1 : 0, userId]);
+
+  return {
+    id: userId,
+    darkMode,
+    message: 'Preferences updated successfully',
+  };
+};
+
+export const updateUserProfileService = async (userId, firstName, lastName) => {
+  const sql = 'UPDATE users SET first_name = ?, last_name = ? WHERE user_id = ?';
+  await safeExecute(sql, [firstName, lastName, userId]);
+
+  return {
+    id: userId,
+    firstName,
+    lastName,
+    message: 'Profile updated successfully',
+  };
+};
+
+/**
+ * Updates user profile picture path.
+ *
+ * @param {number} userId - The user ID.
+ * @param {string} profilePicturePath - The path to the profile picture.
+ * @returns {Promise<Object>} Updated user object.
+ */
+export const updateProfilePictureService = async (userId, profilePicturePath) => {
+  const sql = 'UPDATE users SET profile_picture_path = ? WHERE user_id = ?';
+  await safeExecute(sql, [profilePicturePath, userId]);
+
+  return {
+    id: userId,
+    profilePictureUrl: profilePicturePath,
+    message: 'Profile picture updated successfully',
   };
 };
