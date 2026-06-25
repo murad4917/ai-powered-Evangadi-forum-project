@@ -1,9 +1,11 @@
 import { StatusCodes } from "http-status-codes";
 import {
   ingestKnowledgeBaseService,
+  ingestKnowledgeBaseFromTextService,
   queryChatbotService,
   getChatbotStatusService,
 } from "../service/chatbotService.js";
+
 
 /**
  * POST /api/chatbot/ingest
@@ -62,3 +64,25 @@ export const chatChatbotController = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * POST /api/chatbot/upload
+ * Upload a .txt knowledge base file, chunk it, embed chunks, and store into chatbot_chunks.
+ */
+export const uploadChatbotTextController = async (req, res, next) => {
+  try {
+    const force = req.body?.force === true || req.body?.force === "true";
+
+    const text = req.file?.buffer?.toString("utf8") || "";
+    const data = await ingestKnowledgeBaseFromTextService({ text, force });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: data.message,
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

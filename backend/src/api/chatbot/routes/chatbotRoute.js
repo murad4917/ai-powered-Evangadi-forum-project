@@ -4,11 +4,13 @@ import {
   chatChatbotController,
   getChatbotStatusController,
   ingestChatbotController,
+  uploadChatbotTextController,
 } from "../controller/chatbotController.js";
 import {
   chatChatbotValidation,
   ingestChatbotValidation,
 } from "../validations/chatbotValidation.js";
+import { handleChatbotTextUpload } from "../../../middleware/chatbotTextUpload.js";
 
 const router = express.Router();
 
@@ -41,6 +43,18 @@ router.post(
   authenticateUser,
   chatChatbotValidation,
   chatChatbotController,
+);
+
+/**
+ * @route POST /api/chatbot/upload
+ * @desc Upload a .txt knowledge base file
+ * @access Protected
+ */
+router.post(
+  "/upload",
+  authenticateUser,
+  handleChatbotTextUpload,
+  uploadChatbotTextController,
 );
 
 export default router;
