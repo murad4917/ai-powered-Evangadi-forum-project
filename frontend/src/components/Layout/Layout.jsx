@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import Navbar from "../Navbar/Navbar.jsx";
 import Sidebar from "../Sidebar/Sidebar.jsx";
+import ChatbotWidget from "../chatbot/ChatbotWidget.jsx";
 import styles from "./Layout.module.css";
 
 /**
@@ -87,6 +88,7 @@ export default function Layout() {
           </div>
         </footer>
       </div>
+      <ChatbotWidget />
     </div>
   );
 }
