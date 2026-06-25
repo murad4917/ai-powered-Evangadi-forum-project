@@ -14,6 +14,8 @@ CREATE TABLE `users` (
     `last_name` VARCHAR(50) NOT NULL,
     `email` VARCHAR(320) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
+    `profile_picture_path` VARCHAR(1024) NULL DEFAULT NULL,
+    `dark_mode` BOOLEAN DEFAULT FALSE,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CHECK (`email` = LOWER(`email`)),
@@ -133,6 +135,7 @@ CREATE TABLE `document_chunk_vectors` (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+<<<<<<< Updated upstream
 - -----------------------------------------------------------------------------
 -- 6. Chatbot: Evangadi knowledge base chunks and embeddings
 -- -----------------------------------------------------------------------------
@@ -147,3 +150,5 @@ CREATE TABLE `chatbot_chunks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+=======
+>>>>>>> Stashed changes

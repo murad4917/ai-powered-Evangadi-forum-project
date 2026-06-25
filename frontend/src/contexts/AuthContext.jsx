@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/auth/auth.service.js';
+import { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { authService } from "../services/auth/auth.service.js";
 
 /**
  * Authentication Context providing user state and auth methods.
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
    * Registers a new user. Does not automatically log them in.
    * @param {Object} userData - { firstName, lastName, email, password }
    */
-  const register = async userData => {
+  const register = async (userData) => {
     setLoading(true);
     try {
       const { user } = await authService.register(userData);
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
    * Authenticates a user and updates the session state.
    * @param {Object} credentials - { email, password }
    */
-  const login = async credentials => {
+  const login = async (credentials) => {
     setLoading(true);
     try {
       const { user } = await authService.login(credentials);
@@ -67,12 +67,13 @@ export function AuthProvider({ children }) {
   const logout = () => {
     authService.logout();
     setUser(null);
-    navigate('/auth');
+    navigate("/auth");
   };
 
   // Context value with state and methods
   const value = {
     user,
+    setUser,
     loading,
     register,
     login,
@@ -91,7 +92,7 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
 
   return context;

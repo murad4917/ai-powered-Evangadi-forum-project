@@ -226,3 +226,92 @@ h5 {
 h6 {
   font-size: var(--text-base);
 }
+
+/* ───────────────────────────────────────────────────────────────── */
+/* Dark Mode Styles */
+/* ───────────────────────────────────────────────────────────────── */
+
+.dark-mode {
+  /* Primary colors (adjusted for dark mode) */
+  --primary: #ff9f43; /* Brighter orange for dark backgrounds */
+  --primary-hover: #ffb366; /* Lighter orange hover */
+  --primary-light: #2d1e0a; /* Very dark orange tint */
+  --primary-dark: #e68a1a; /* Darker orange */
+  --primary-container: #ff9f43;
+
+  /* Surface colors (dark mode) */
+  --surface: #1f2937; /* Dark gray background */
+  --surface-hover: #2d3748; /* Slightly lighter gray */
+  --surface-container-low: #374151; /* Medium gray */
+  --surface-container-high: #4b5563; /* Lighter gray for containers */
+  --surface-container-highest: #6b7280; /* Lightest gray */
+
+  /* Text colors (inverted for dark mode) */
+  --text-primary: #f3f4f6; /* Light gray text */
+  --text-secondary: #d1d5db; /* Medium gray text */
+  --text-tertiary: #9ca3af; /* Dim gray text */
+  --text-placeholder: #6b7280; /* Placeholder text */
+  --text-inverse: #0f172a; /* Dark text for light backgrounds */
+
+  /* Border colors (dark mode) */
+  --border: #4b5563;
+  --border-hover: #6b7280;
+  --border-focus: #ff9f43;
+
+  /* Status colors (adjusted for dark mode) */
+  --success: #10b981;
+  --success-light: #064e3b;
+  --warning: #f59e0b;
+  --warning-light: #78350f;
+  --error: #ef4444;
+  --error-light: #7f1d1d;
+  --info: #60a5fa;
+  --info-light: #0c2d48;
+
+  /* Background colors (dark mode) */
+  --background: #111827; /* Darkest background */
+  --background-secondary: #1f2937; /* Secondary dark background */
+
+  /* Shadow values (adjusted for dark mode) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5),
+    0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5),
+    0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-focus: 0 0 0 3px rgba(255, 159, 67, 0.2);
+}
+
+.dark-mode body {
+  background-color: var(--background);
+  color: var(--text-primary);
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+  background-color: var(--surface-container-low);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.dark-mode input:focus,
+.dark-mode textarea:focus,
+.dark-mode select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 1px var(--primary) !important;
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+  color: var(--text-placeholder);
+}
+
+.dark-mode a {
+  color: var(--primary);
+}
+
+.dark-mode a:hover {
+  color: var(--primary-hover);
+}

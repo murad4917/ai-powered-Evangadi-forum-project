@@ -42,3 +42,43 @@ export const loginValidation = [
 
   validationErrorHandler,
 ];
+
+export const updateProfileValidation = [
+  body("firstName")
+    .notEmpty()
+    .withMessage("First name is required")
+    .isString()
+    .withMessage("First name must be a string")
+    .isLength({ min: 2 })
+    .withMessage("First name must be at least 2 characters long"),
+  body("lastName")
+    .notEmpty()
+    .withMessage("Last name is required")
+    .isString()
+    .withMessage("Last name must be a string")
+    .isLength({ min: 2 })
+    .withMessage("Last name must be at least 2 characters long"),
+
+  validationErrorHandler,
+];
+
+export const changePasswordValidation = [
+  body("oldPassword")
+    .notEmpty()
+    .withMessage("Current password is required"),
+  body("newPassword")
+    .notEmpty()
+    .withMessage("New password is required")
+    .isLength({ min: 6 })
+    .withMessage("New password must be at least 6 characters long"),
+
+  validationErrorHandler,
+];
+
+export const updatePreferencesValidation = [
+  body("darkMode")
+    .isBoolean()
+    .withMessage("Dark mode must be a boolean value"),
+
+  validationErrorHandler,
+];

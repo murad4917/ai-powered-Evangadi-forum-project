@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import { db } from "./db/config.js";
 import { mainRouter } from "./src/api/routes.js";
 import { errorHandler } from "./src/middleware/error-handler.js";
@@ -11,6 +12,11 @@ const port = process.env.PORT || 3777;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "uploads")),
+);
 
 // Health check
 app.get("/health", (req, res) => {
