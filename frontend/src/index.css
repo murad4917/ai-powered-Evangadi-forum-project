@@ -247,7 +247,7 @@ h6 {
   --surface-container-highest: #6b7280; /* Lightest gray */
 
   /* Text colors (inverted for dark mode) */
-  --text-primary: #f3f4f6; /* Light gray text */
+  --text-primary: #ffffff; /* White text */
   --text-secondary: #d1d5db; /* Medium gray text */
   --text-tertiary: #9ca3af; /* Dim gray text */
   --text-placeholder: #6b7280; /* Placeholder text */
@@ -286,6 +286,12 @@ h6 {
 .dark-mode body {
   background-color: var(--background);
   color: var(--text-primary);
+}
+
+.dark-mode .sidebar,
+.dark-mode .sidebar * {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
 }
 
 .dark-mode input,
