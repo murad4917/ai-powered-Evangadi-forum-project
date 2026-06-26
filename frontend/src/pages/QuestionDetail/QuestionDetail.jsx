@@ -3,24 +3,26 @@
  * Route: `/question/:questionHash`
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Bold,
   Code2,
+  Edit3,
   Italic,
   Link2,
   MessageSquare,
   Share2,
   Sparkles,
-} from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext.jsx';
-import RagAnswerBody from '../../components/RagAnswerBody/RagAnswerBody.jsx';
-import { answerService } from '../../services/answer/answer.service.js';
-import { questionService } from '../../services/question/question.service.js';
-import { isAuthoredByUser } from '../../lib/utils.js';
-import styles from './QuestionDetail.module.css';
+  Trash2,
+} from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext.jsx";
+import RagAnswerBody from "../../components/RagAnswerBody/RagAnswerBody.jsx";
+import { answerService } from "../../services/answer/answer.service.js";
+import { questionService } from "../../services/question/question.service.js";
+import { isAuthoredByUser } from "../../lib/utils.js";
+import styles from "./QuestionDetail.module.css";
 
 const ANSWER_MIN = 20;
 
@@ -40,8 +42,8 @@ function wrapSelection(textarea, before, after = before) {
 }
 
 function getAvatarUrl(author) {
-  const firstName = author?.firstName || 'User';
-  const lastName = author?.lastName || '';
+  const firstName = author?.firstName || "User";
+  const lastName = author?.lastName || "";
   return (
     author?.avatar ||
     `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`
@@ -54,25 +56,25 @@ function getAuthorLabel(author, currentUser) {
     currentUser?.id != null &&
     String(author.id) === String(currentUser.id)
   ) {
-    return 'You';
+    return "You";
   }
   const { firstName, lastName } = author ?? {};
-  return [firstName, lastName].filter(Boolean).join(' ') || 'Unknown';
+  return [firstName, lastName].filter(Boolean).join(" ") || "Unknown";
 }
 
 function formatPostedDate(dateInput) {
-  if (!dateInput) return '';
+  if (!dateInput) return "";
   const date = new Date(dateInput);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-US', {
-    month: 'numeric',
-    day: 'numeric',
-    year: 'numeric',
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
 function getAnswerCountLabel(count) {
-  if (count === 1) return '1 Answer';
+  if (count === 1) return "1 Answer";
   return `${count ?? 0} Answers`;
 }
 
@@ -88,7 +90,7 @@ export default function QuestionDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
-  const [answerText, setAnswerText] = useState('');
+  const [answerText, setAnswerText] = useState("");
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,8 +98,16 @@ export default function QuestionDetail() {
   const [fitError, setFitError] = useState(null);
   const [isCheckingFit, setIsCheckingFit] = useState(false);
 
+  const [editingAnswerId, setEditingAnswerId] = useState(null);
+  const [editedAnswerText, setEditedAnswerText] = useState("");
+  const [pendingDeleteAnswerId, setPendingDeleteAnswerId] = useState(null);
+  const [answerActionError, setAnswerActionError] = useState(null);
+  const [isAnswerUpdating, setIsAnswerUpdating] = useState(false);
+  const [isAnswerDeleting, setIsAnswerDeleting] = useState(false);
+
   const isOwnQuestion = question && isAuthoredByUser(question, user);
-  const isBusy = isSubmitting || isCheckingFit;
+  const isBusy =
+    isSubmitting || isCheckingFit || isAnswerUpdating || isAnswerDeleting;
   const answerLength = answerText.length;
 
   const loadQuestion = useCallback(async () => {
@@ -114,7 +124,7 @@ export default function QuestionDetail() {
       setAnswers(detail.answers ?? []);
       setRelatedQuestions(similar);
     } catch {
-      setLoadError('Failed to load question details.');
+      setLoadError("Failed to load question details.");
       setQuestion(null);
       setAnswers([]);
       setRelatedQuestions([]);
@@ -127,15 +137,15 @@ export default function QuestionDetail() {
     loadQuestion();
   }, [loadQuestion]);
 
-  const applyMarkdown = format => {
+  const applyMarkdown = (format) => {
     const textarea = answerRef.current;
     if (!textarea) return;
 
     const wrappers = {
-      bold: ['**', '**'],
-      italic: ['*', '*'],
-      code: ['`', '`'],
-      link: ['[', '](url)'],
+      bold: ["**", "**"],
+      italic: ["*", "*"],
+      code: ["`", "`"],
+      link: ["[", "](url)"],
     };
 
     const [before, after] = wrappers[format];
@@ -188,13 +198,97 @@ export default function QuestionDetail() {
       );
       setFitResult(result);
     } catch (err) {
-      setFitError(err?.message || 'Failed to check answer fit.');
+      setFitError(err?.message || "Failed to check answer fit.");
     } finally {
       setIsCheckingFit(false);
     }
   };
 
-  const handleSubmitAnswer = async event => {
+  const startAnswerEdit = (answer) => {
+    setEditingAnswerId(answer.id);
+    setEditedAnswerText(answer.content);
+    setPendingDeleteAnswerId(null);
+    setAnswerActionError(null);
+  };
+
+  const cancelAnswerEdit = () => {
+    setEditingAnswerId(null);
+    setEditedAnswerText("");
+    setAnswerActionError(null);
+  };
+
+  const startAnswerDelete = (answer) => {
+    setPendingDeleteAnswerId(answer.id);
+    setEditingAnswerId(null);
+    setEditedAnswerText("");
+    setAnswerActionError(null);
+  };
+
+  const cancelAnswerDelete = () => {
+    setPendingDeleteAnswerId(null);
+    setAnswerActionError(null);
+  };
+
+  const handleSaveAnswerEdit = async (event) => {
+    event.preventDefault();
+    if (!editingAnswerId) return;
+
+    const trimmed = editedAnswerText.trim();
+    if (trimmed.length < ANSWER_MIN) {
+      setAnswerActionError(`Answer must be at least ${ANSWER_MIN} characters.`);
+      return;
+    }
+
+    setIsAnswerUpdating(true);
+    setAnswerActionError(null);
+
+    try {
+      const updated = await answerService.updateAnswer(
+        editingAnswerId,
+        trimmed,
+      );
+      setAnswers((prev) =>
+        prev.map((answer) => (answer.id === updated.id ? updated : answer)),
+      );
+      cancelAnswerEdit();
+    } catch (err) {
+      setAnswerActionError(err.message || "Failed to update answer.");
+    } finally {
+      setIsAnswerUpdating(false);
+    }
+  };
+
+  const handleConfirmAnswerDelete = async () => {
+    if (!pendingDeleteAnswerId) return;
+
+    setIsAnswerDeleting(true);
+    setAnswerActionError(null);
+
+    try {
+      await answerService.deleteAnswer(pendingDeleteAnswerId);
+      setAnswers((prev) =>
+        prev.filter((answer) => answer.id !== pendingDeleteAnswerId),
+      );
+      setQuestion((prev) =>
+        prev
+          ? {
+              ...prev,
+              answerCount: Math.max(
+                (prev.answerCount ?? answers.length) - 1,
+                0,
+              ),
+            }
+          : prev,
+      );
+      cancelAnswerDelete();
+    } catch (err) {
+      setAnswerActionError(err.message || "Failed to delete answer.");
+    } finally {
+      setIsAnswerDeleting(false);
+    }
+  };
+
+  const handleSubmitAnswer = async (event) => {
     event.preventDefault();
 
     const trimmed = answerText.trim();
@@ -208,8 +302,8 @@ export default function QuestionDetail() {
 
     try {
       const newAnswer = await answerService.postAnswer(question.id, trimmed);
-      setAnswers(prev => [...prev, newAnswer]);
-      setQuestion(prev =>
+      setAnswers((prev) => [...prev, newAnswer]);
+      setQuestion((prev) =>
         prev
           ? {
               ...prev,
@@ -217,10 +311,10 @@ export default function QuestionDetail() {
             }
           : prev,
       );
-      setAnswerText('');
+      setAnswerText("");
       setFitResult(null);
     } catch {
-      setSubmitError('Failed to post answer. Please try again.');
+      setSubmitError("Failed to post answer. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -229,7 +323,9 @@ export default function QuestionDetail() {
   if (isLoading) {
     return (
       <div className={styles.statePanel}>
-        <p className={styles.statePanel__message}>Loading question details...</p>
+        <p className={styles.statePanel__message}>
+          Loading question details...
+        </p>
       </div>
     );
   }
@@ -238,15 +334,15 @@ export default function QuestionDetail() {
     return (
       <div className={styles.statePanel}>
         <p
-          className={`${styles.statePanel__message} ${styles['statePanel__message--error']}`}
-          role='alert'
+          className={`${styles.statePanel__message} ${styles["statePanel__message--error"]}`}
+          role="alert"
         >
-          {loadError || 'Failed to load question details.'}
+          {loadError || "Failed to load question details."}
         </p>
         <button
-          type='button'
+          type="button"
           className={styles.statePanel__action}
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate("/dashboard")}
         >
           Return to Dashboard
         </button>
@@ -259,9 +355,9 @@ export default function QuestionDetail() {
   return (
     <div className={styles.page}>
       <button
-        type='button'
+        type="button"
         className={styles.backLink}
-        onClick={() => navigate('/dashboard')}
+        onClick={() => navigate("/dashboard")}
       >
         <ArrowLeft size={16} aria-hidden />
         Back to feed
@@ -275,7 +371,7 @@ export default function QuestionDetail() {
                 <img
                   src={getAvatarUrl(question.author)}
                   alt={getAuthorLabel(question.author, user)}
-                  referrerPolicy='no-referrer'
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <div>
@@ -296,22 +392,25 @@ export default function QuestionDetail() {
 
             <div className={styles.questionCard__actions}>
               <button
-                type='button'
+                type="button"
                 className={styles.metaButton}
                 onClick={handleShare}
               >
                 <Share2 size={14} aria-hidden />
                 Share
               </button>
-              <span className={styles.metaButton} aria-label='Answer count'>
+              <span className={styles.metaButton} aria-label="Answer count">
                 <MessageSquare size={14} aria-hidden />
                 {getAnswerCountLabel(answerCount)}
               </span>
             </div>
           </article>
 
-          <section aria-labelledby='community-answers-title'>
-            <h2 id='community-answers-title' className={styles.answersSection__title}>
+          <section aria-labelledby="community-answers-title">
+            <h2
+              id="community-answers-title"
+              className={styles.answersSection__title}
+            >
               Community Answers ({answers.length})
             </h2>
 
@@ -334,35 +433,131 @@ export default function QuestionDetail() {
               </div>
             ) : (
               <div className={styles.answersList}>
-                {answers.map(answer => (
-                  <article key={answer.id} className={styles.answerCard}>
-                    <header className={styles.answerCard__header}>
-                      <div className={styles.answerCard__avatar}>
-                        <img
-                          src={getAvatarUrl(answer.author)}
-                          alt={getAuthorLabel(answer.author, user)}
-                          referrerPolicy='no-referrer'
-                        />
-                      </div>
-                      <div>
-                        <div className={styles.answerCard__author}>
-                          {getAuthorLabel(answer.author, user)}
+                {answerActionError && (
+                  <p className={styles.submitError} role="alert">
+                    {answerActionError}
+                  </p>
+                )}
+                {answers.map((answer) => {
+                  const isOwnAnswer = isAuthoredByUser(answer, user);
+                  const isEditingAnswer = editingAnswerId === answer.id;
+                  const isDeletingAnswer = pendingDeleteAnswerId === answer.id;
+
+                  return (
+                    <article key={answer.id} className={styles.answerCard}>
+                      <header className={styles.answerCard__header}>
+                        <div className={styles.answerCard__avatar}>
+                          <img
+                            src={getAvatarUrl(answer.author)}
+                            alt={getAuthorLabel(answer.author, user)}
+                            referrerPolicy="no-referrer"
+                          />
                         </div>
-                        <div className={styles.answerCard__date}>
-                          {formatPostedDate(answer.createdAt)}
+                        <div>
+                          <div className={styles.answerCard__author}>
+                            {getAuthorLabel(answer.author, user)}
+                          </div>
+                          <div className={styles.answerCard__date}>
+                            {formatPostedDate(answer.createdAt)}
+                          </div>
                         </div>
-                      </div>
-                    </header>
-                    <RagAnswerBody>{answer.content}</RagAnswerBody>
-                  </article>
-                ))}
+                      </header>
+
+                      {isEditingAnswer ? (
+                        <form
+                          className={styles.answerEditForm}
+                          onSubmit={handleSaveAnswerEdit}
+                        >
+                          <textarea
+                            className={styles.answerEditTextarea}
+                            value={editedAnswerText}
+                            onChange={(event) =>
+                              setEditedAnswerText(event.target.value)
+                            }
+                            rows={6}
+                            disabled={isAnswerUpdating}
+                          />
+                          <div className={styles.answerEditActions}>
+                            <button
+                              type="submit"
+                              className={styles.saveButton}
+                              disabled={isAnswerUpdating}
+                            >
+                              {isAnswerUpdating ? "Saving…" : "Save"}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.cancelButton}
+                              onClick={cancelAnswerEdit}
+                              disabled={isAnswerUpdating}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <>
+                          <RagAnswerBody>{answer.content}</RagAnswerBody>
+                          {isOwnAnswer && (
+                            <div className={styles.answerActions}>
+                              <button
+                                type="button"
+                                className={`${styles.answerActionButton} ${styles.editButton}`}
+                                onClick={() => startAnswerEdit(answer)}
+                              >
+                                <Edit3 size={14} aria-hidden />
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className={`${styles.answerActionButton} ${styles.deleteButton}`}
+                                onClick={() => startAnswerDelete(answer)}
+                              >
+                                <Trash2 size={14} aria-hidden />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {isDeletingAnswer && (
+                        <div className={styles.answerDeleteConfirm}>
+                          <p>
+                            Delete this answer? This action cannot be undone.
+                          </p>
+                          <div className={styles.answerDeleteActions}>
+                            <button
+                              type="button"
+                              className={styles.deleteConfirmButton}
+                              onClick={handleConfirmAnswerDelete}
+                              disabled={isAnswerDeleting}
+                            >
+                              {isAnswerDeleting ? "Deleting…" : "Yes, delete"}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.cancelButton}
+                              onClick={cancelAnswerDelete}
+                              disabled={isAnswerDeleting}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>
 
           {isOwnQuestion ? (
             <section className={styles.formSection}>
-              <h2 className={styles.formSection__title}>Contribute an answer</h2>
+              <h2 className={styles.formSection__title}>
+                Contribute an answer
+              </h2>
               <p className={styles.ownQuestionNote}>
                 You posted this question. Other learners can reply here — you
                 cannot answer your own thread.
@@ -370,11 +565,13 @@ export default function QuestionDetail() {
             </section>
           ) : (
             <section className={styles.formSection}>
-              <h2 className={styles.formSection__title}>Contribute an answer</h2>
+              <h2 className={styles.formSection__title}>
+                Contribute an answer
+              </h2>
 
               <form onSubmit={handleSubmitAnswer} noValidate>
                 {submitError ? (
-                  <p className={styles.submitError} role='alert'>
+                  <p className={styles.submitError} role="alert">
                     {submitError}
                   </p>
                 ) : null}
@@ -383,42 +580,42 @@ export default function QuestionDetail() {
                   <div className={styles.editor__toolbar}>
                     <div className={styles.editor__tools}>
                       <button
-                        type='button'
+                        type="button"
                         className={styles.editor__tool}
-                        onClick={() => applyMarkdown('bold')}
+                        onClick={() => applyMarkdown("bold")}
                         disabled={isBusy}
-                        aria-label='Bold'
-                        title='Bold'
+                        aria-label="Bold"
+                        title="Bold"
                       >
                         <Bold size={16} aria-hidden />
                       </button>
                       <button
-                        type='button'
+                        type="button"
                         className={styles.editor__tool}
-                        onClick={() => applyMarkdown('italic')}
+                        onClick={() => applyMarkdown("italic")}
                         disabled={isBusy}
-                        aria-label='Italic'
-                        title='Italic'
+                        aria-label="Italic"
+                        title="Italic"
                       >
                         <Italic size={16} aria-hidden />
                       </button>
                       <button
-                        type='button'
+                        type="button"
                         className={styles.editor__tool}
-                        onClick={() => applyMarkdown('code')}
+                        onClick={() => applyMarkdown("code")}
                         disabled={isBusy}
-                        aria-label='Code'
-                        title='Code'
+                        aria-label="Code"
+                        title="Code"
                       >
                         <Code2 size={16} aria-hidden />
                       </button>
                       <button
-                        type='button'
+                        type="button"
                         className={styles.editor__tool}
-                        onClick={() => applyMarkdown('link')}
+                        onClick={() => applyMarkdown("link")}
                         disabled={isBusy}
-                        aria-label='Link'
-                        title='Link'
+                        aria-label="Link"
+                        title="Link"
                       >
                         <Link2 size={16} aria-hidden />
                       </button>
@@ -432,41 +629,41 @@ export default function QuestionDetail() {
                     ref={answerRef}
                     className={styles.editor__textarea}
                     value={answerText}
-                    onChange={event => {
+                    onChange={(event) => {
                       setAnswerText(event.target.value);
                       setSubmitError(null);
                       setFitResult(null);
                     }}
-                    placeholder='Type your answer here... You can use Markdown to format your code!'
+                    placeholder="Type your answer here... You can use Markdown to format your code!"
                     disabled={isBusy}
                   />
                 </div>
 
                 <div className={styles.formFooter}>
                   <button
-                    type='button'
+                    type="button"
                     className={styles.fitButton}
                     onClick={handleCheckFit}
                     disabled={isBusy}
                   >
                     <Sparkles size={16} aria-hidden />
-                    {isCheckingFit ? 'Checking...' : 'Check draft fit'}
+                    {isCheckingFit ? "Checking..." : "Check draft fit"}
                   </button>
                   <span className={styles.formHint}>
-                    Relevance only. Not grading correctness. You need at least{' '}
+                    Relevance only. Not grading correctness. You need at least{" "}
                     {ANSWER_MIN} characters.
                   </span>
                   <button
-                    type='submit'
+                    type="submit"
                     className={styles.submitButton}
                     disabled={isBusy}
                   >
-                    {isSubmitting ? 'Posting...' : 'Post Your Answer'}
+                    {isSubmitting ? "Posting..." : "Post Your Answer"}
                   </button>
                 </div>
 
                 {fitError ? (
-                  <p className={styles.submitError} role='alert'>
+                  <p className={styles.submitError} role="alert">
                     {fitError}
                   </p>
                 ) : null}
@@ -474,9 +671,9 @@ export default function QuestionDetail() {
                 {fitResult ? (
                   <div
                     className={`${styles.fitPanel} ${
-                      styles[`fitPanel--${fitResult.level}`] || ''
+                      styles[`fitPanel--${fitResult.level}`] || ""
                     }`}
-                    role='status'
+                    role="status"
                   >
                     <p className={styles.fitPanel__level}>
                       Fit: {fitResult.level}
@@ -490,12 +687,12 @@ export default function QuestionDetail() {
         </div>
 
         {relatedQuestions.length > 0 ? (
-          <aside className={styles.sidebar} aria-labelledby='related-title'>
-            <h2 id='related-title' className={styles.sidebar__title}>
+          <aside className={styles.sidebar} aria-labelledby="related-title">
+            <h2 id="related-title" className={styles.sidebar__title}>
               Related Questions
             </h2>
             <div className={styles.relatedList}>
-              {relatedQuestions.map(related => (
+              {relatedQuestions.map((related) => (
                 <Link
                   key={related.questionHash ?? related.id}
                   to={`/question/${related.questionHash}`}
@@ -503,12 +700,9 @@ export default function QuestionDetail() {
                 >
                   <p className={styles.relatedCard__title}>{related.title}</p>
                   <p className={styles.relatedCard__meta}>
-                    {[
-                      related.author?.firstName,
-                      related.author?.lastName,
-                    ]
+                    {[related.author?.firstName, related.author?.lastName]
                       .filter(Boolean)
-                      .join(' ')}{' '}
+                      .join(" ")}{" "}
                     · {formatPostedDate(related.createdAt)}
                   </p>
                 </Link>

@@ -237,6 +237,87 @@ export const getQuestionsService = async (filters) => {
 //   };
 // };
 
+export const updateQuestionService = async ({
+  questionHash,
+  userId,
+  title,
+  content,
+}) => {
+  const trimmedTitle = title?.trim();
+  const trimmedContent = content?.trim();
+
+  if (!trimmedTitle || trimmedTitle.length < 5) {
+    throw new BadRequestError("Title must be at least 5 characters");
+  }
+
+  if (!trimmedContent || trimmedContent.length < 10) {
+    throw new BadRequestError("Content must be at least 10 characters");
+  }
+
+  const questionLookupSql = `
+    SELECT question_id AS id, user_id AS userId
+    FROM questions
+    WHERE question_hash = ?
+    LIMIT 1
+  `;
+
+  const existingQuestionRows = await safeExecute(questionLookupSql, [questionHash]);
+
+  if (existingQuestionRows.length === 0) {
+    throw new NotFoundError("Question not found");
+  }
+
+  const existingQuestion = existingQuestionRows[0];
+
+  if (Number(existingQuestion.userId) !== Number(userId)) {
+    throw new BadRequestError("You can only edit your own questions");
+  }
+
+  const updateSql = `
+    UPDATE questions
+    SET title = ?, content = ?
+    WHERE question_hash = ? AND user_id = ?
+  `;
+
+  await safeExecute(updateSql, [trimmedTitle, trimmedContent, questionHash, userId]);
+
+  return {
+    questionHash,
+    title: trimmedTitle,
+    content: trimmedContent,
+  };
+};
+
+export const deleteQuestionService = async ({ questionHash, userId }) => {
+  const questionLookupSql = `
+    SELECT question_id AS id, user_id AS userId
+    FROM questions
+    WHERE question_hash = ?
+    LIMIT 1
+  `;
+
+  const existingQuestionRows = await safeExecute(questionLookupSql, [questionHash]);
+
+  if (existingQuestionRows.length === 0) {
+    throw new NotFoundError("Question not found");
+  }
+
+  const existingQuestion = existingQuestionRows[0];
+
+  if (Number(existingQuestion.userId) !== Number(userId)) {
+    throw new BadRequestError("You can only delete your own questions");
+  }
+
+  const deleteSql = `
+    DELETE FROM questions
+    WHERE question_hash = ? AND user_id = ?
+  `;
+
+  await safeExecute(deleteSql, [questionHash, userId]);
+
+  return { deleted: true };
+};
+
 export const getSingleQuestionService = async ({
   questionHash,
   includeAnswer = true,

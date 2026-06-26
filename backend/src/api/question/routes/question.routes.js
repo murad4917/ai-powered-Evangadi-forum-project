@@ -7,6 +7,8 @@ import {
   searchQuestionsSemanticController,
   getSingleQuestionController,
   getSimilarQuestionsController,
+  updateQuestionController,
+  deleteQuestionController,
 } from "../controller/questionController.js";
 import {
   createQuestionValidation,
@@ -16,6 +18,8 @@ import {
   searchQuestionsSemanticValidation,
   getSingleQuestionValidation,
   getSimilarQuestionsValidation,
+  updateQuestionValidation,
+  deleteQuestionValidation,
 } from "../validations/question.validation.js";
 import { authenticateUser } from "../../../middleware/authentication.js";
 
@@ -55,13 +59,26 @@ router.get(
   searchQuestionsSemanticValidation,
   searchQuestionsSemanticController,
 );
+router.put(
+  "/:questionHash",
+  authenticateUser,
+  updateQuestionValidation,
+  updateQuestionController,
+);
+
+router.delete(
+  "/:questionHash",
+  authenticateUser,
+  deleteQuestionValidation,
+  deleteQuestionController,
+);
+
 router.get(
   "/:questionHash",
   authenticateUser,
   getSingleQuestionValidation,
   getSingleQuestionController,
 );
-
 
 router.get(
   "/:questionHash/similar",
