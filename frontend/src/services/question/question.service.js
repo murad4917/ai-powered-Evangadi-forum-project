@@ -54,6 +54,27 @@ async function createQuestion({ title, content }) {
   }
 }
 
+async function updateQuestion(questionHash, { title, content }) {
+  try {
+    const response = await apiClient.put(`/api/questions/${questionHash}`, {
+      title,
+      content,
+    });
+    return response.data.data;
+  } catch (error) {
+    throw handleQuestionError(error);
+  }
+}
+
+async function deleteQuestion(questionHash) {
+  try {
+    const response = await apiClient.delete(`/api/questions/${questionHash}`);
+    return response.data.data;
+  } catch (error) {
+    throw handleQuestionError(error);
+  }
+}
+
 /**
  * Requests AI draft-coach tips for a question draft.
  * @param {{ title?: string, content: string }} payload
@@ -170,6 +191,8 @@ export const questionService = {
   getQuestions,
   searchQuestionsSemantic,
   createQuestion,
+  updateQuestion,
+  deleteQuestion,
   generateQuestionDraftCoach,
   getSingleQuestion,
   assessAnswerFit,

@@ -5,6 +5,8 @@ import {
   getSingleQuestionService,
   searchQuestionsSemanticService,
   getSimilarQuestionsService,
+  updateQuestionService,
+  deleteQuestionService,
 } from "../service/question.service.js";
 import {
   generateQuestionDraftCoachService,
@@ -86,6 +88,45 @@ export const getQuestionsController = async (req, res, next) => {
       success: true,
       message: "Questions retrieved successfully",
       ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateQuestionController = async (req, res, next) => {
+  try {
+    const { questionHash } = req.params;
+    const { title, content } = req.body;
+    const data = await updateQuestionService({
+      questionHash,
+      userId: req.user.id,
+      title,
+      content,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Question updated successfully.",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteQuestionController = async (req, res, next) => {
+  try {
+    const { questionHash } = req.params;
+    const data = await deleteQuestionService({
+      questionHash,
+      userId: req.user.id,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Question deleted successfully.",
+      data,
     });
   } catch (error) {
     next(error);

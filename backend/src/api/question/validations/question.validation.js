@@ -59,6 +59,45 @@ export const assessAnswerAgainstQuestionValidation = [
   validationErrorHandler,
 ];
 
+export const updateQuestionValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("Question hash must be a string")
+    .matches(/^[a-f0-9]{16}$/)
+    .withMessage("Question hash must be a 16-character lowercase hex string")
+    .trim(),
+
+  body("title")
+    .notEmpty()
+    .withMessage("Title is required")
+    .isLength({ min: 5 })
+    .withMessage("Title must be at least 5 characters")
+    .isLength({ max: 200 })
+    .withMessage("Title cannot exceed 200 characters")
+    .trim(),
+
+  body("content")
+    .notEmpty()
+    .withMessage("Body is required")
+    .isLength({ min: 10 })
+    .withMessage("Body must be at least 10 characters")
+    .isLength({ max: 5000 })
+    .withMessage("Body cannot exceed 5000 characters")
+    .trim(),
+
+  validationErrorHandler,
+];
+
+export const deleteQuestionValidation = [
+  param("questionHash")
+    .isString()
+    .withMessage("Question hash must be a string")
+    .matches(/^[a-f0-9]{16}$/)
+    .withMessage("Question hash must be a 16-character lowercase hex string")
+    .trim(),
+  validationErrorHandler,
+];
+
 export const getQuestionsValidation = [
   query("search")
     .optional()

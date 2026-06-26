@@ -125,16 +125,17 @@
 
 /* Error state inner container */
 .errorBox {
-  border: 1px solid rgba(239, 68, 68, 0.15);
-  background-color: var(--error-light);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.95), rgba(255, 247, 247, 0.95));
   color: var(--error);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-lg) var(--spacing-2xl);
   text-align: center;
-  max-width: 24rem;
+  max-width: 100%;
   width: 100%;
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ─── Questions List ────────────────────────────────────────────────── */
@@ -153,9 +154,7 @@
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  cursor: pointer;
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-  text-decoration: none;
   color: inherit;
   position: relative;
   overflow: hidden;
@@ -166,6 +165,16 @@
   background-color: var(--surface-hover);
   border-color: var(--border-hover);
   box-shadow: var(--shadow-md);
+  color: inherit;
+}
+
+.questionCard__link {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
   color: inherit;
 }
 
@@ -246,6 +255,153 @@
   line-height: 1.4;
 }
 
+.questionCard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: auto;
+  align-items: center;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.iconButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.iconButtonPrimary {
+  color: var(--primary);
+  border-color: rgba(249, 115, 22, 0.2);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(249, 115, 22, 0.04));
+}
+
+.iconButtonDanger {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.2);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.12), rgba(220, 38, 38, 0.04));
+}
+
+.iconButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.editField input,
+.editField textarea {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  color: var(--text-primary);
+  background-color: var(--background);
+}
+
+.editField textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.saveButton,
+.cancelButton {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+
+.saveButton {
+  background-color: var(--primary);
+  color: white;
+}
+
+.cancelButton {
+  background-color: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
+.confirmCard {
+  margin-bottom: var(--spacing-lg);
+  background-color: var(--surface);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+}
+
+.confirmTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.confirmText {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: var(--spacing-lg);
+}
+
+.confirmActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.deleteConfirmButton {
+  background-color: #dc2626;
+  color: white;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.deleteConfirmButton:disabled,
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ─── Responsive ────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .headerCard {
@@ -256,6 +412,14 @@
 
   .newQuestionBtn {
     align-self: flex-start;
+  }
+
+  .questionCard {
+    flex-direction: column;
+  }
+
+  .questionCard__actions {
+    margin-left: 0;
   }
 
   .questionCard {
