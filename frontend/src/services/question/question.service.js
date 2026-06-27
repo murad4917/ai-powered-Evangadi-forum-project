@@ -16,7 +16,7 @@ function handleQuestionError(error) {
   const backendMessage =
     error.response.data?.msg || error.response.data?.message;
 
-  return new Error(backendMessage || "Failed to fetch questions.");
+  return new Error(backendMessage || "Failed to process question request.");
 }
 
 /**
