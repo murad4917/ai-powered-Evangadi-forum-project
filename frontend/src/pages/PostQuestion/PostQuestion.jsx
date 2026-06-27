@@ -92,7 +92,7 @@ export default function PostQuestion() {
     //   link: ["[", "](url)"], // Standard Markdown link
     // };
 
-//     const wrappers = {
+    //     const wrappers = {
     // const wrappers = {
     //   bold: ["**", "**"], // Standard Markdown bold
     //   italic: ["*", "*"], // Standard Markdown italics
@@ -168,8 +168,10 @@ export default function PostQuestion() {
         content: formData.content.trim(),
       });
       setPublishedQuestion(data);
-    } catch {
-      setSubmitError("Failed to post question. Please try again.");
+    } catch (err) {
+      setSubmitError(
+        err?.message || "Failed to post question. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -12,11 +12,59 @@ import {
 
 const generateQuestionHash = () => crypto.randomBytes(8).toString("hex");
 
+export const shouldBlockSimilarQuestion = ({
+  similarQuestions = [],
+  threshold = 0.75,
+}) => {
+  const bestMatch = similarQuestions[0];
+
+  if (!bestMatch || typeof bestMatch.score !== "number") {
+    return false;
+  }
+
+  return bestMatch.score >= threshold;
+};
+
 /**
  * Create a new question with vector embedding
  */
 export const createQuestionService = async (payload) => {
   const { userId, title, content } = payload;
+  const trimmedTitle = title?.trim() || "";
+  const trimmedContent = content?.trim() || "";
+  const semanticSourceText = normalizeQuestionText({
+    title: `${trimmedTitle} ${trimmedContent}`.trim(),
+  });
+  const vectorConfig = getVectorConfig();
+  const semanticThreshold =
+    typeof vectorConfig?.recommendThreshold === "number"
+      ? vectorConfig.recommendThreshold
+      : 0.75;
+
+  try {
+    const duplicateCheck = await findSimilarQuestionsByText({
+      sourceText: semanticSourceText,
+      threshold: semanticThreshold,
+      k: 1,
+    });
+
+    if (
+      shouldBlockSimilarQuestion({
+        similarQuestions: duplicateCheck?.similarQuestions || [],
+        threshold: semanticThreshold,
+      })
+    ) {
+      throw new BadRequestError(
+        "A similar question already exists. Please review it before posting a new one.",
+      );
+    }
+  } catch (error) {
+    if (error instanceof BadRequestError) {
+      throw error;
+    }
+
+    console.warn("Semantic duplicate check skipped:", error?.message || error);
+  }
 
   const insertQuestionSql = `
         INSERT INTO questions (
