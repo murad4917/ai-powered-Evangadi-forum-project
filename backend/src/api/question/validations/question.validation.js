@@ -5,16 +5,16 @@ export const createQuestionValidation = [
   body("title")
     .notEmpty()
     .withMessage("Title is required")
-    .isLength({ min: 5 })
-    .withMessage("Title must be at least 5 characters")
-    .isLength({ max: 200 })
-    .withMessage("Title cannot exceed 200 characters"),
+    .isLength({ min: 10 })
+    .withMessage("Title must be at least 10 characters")
+    .isLength({ max: 255 })
+    .withMessage("Title cannot exceed 255 characters"),
 
   body("content")
     .notEmpty()
-    .withMessage("Body is required")
-    .isLength({ max: 5000 })
-    .withMessage("Body cannot exceed 5000 characters"),
+    .withMessage("Body is required") 
+    .isLength({ min:10})
+    .withMessage("Title must be at least 10 characters")
 
   validationErrorHandler,
 ];
