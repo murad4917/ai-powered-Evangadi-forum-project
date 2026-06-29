@@ -16,13 +16,6 @@ import {
   getDocumentMetaService,
   assertOwnedDocument,
 } from "../service/rag.service.js";
-
-
-
-
-
-
-
 /**
  * Handles POST /api/rag/documents — delegates upload processing to the service layer.
  */
@@ -100,23 +93,8 @@ export const deleteDocumentController = async (req, res, next) => {
 export const searchInDocumentController = async (req, res, next) => {
   try {
     const documentId = parseInt(req.params.documentId, 10);
-
-    if (isNaN(documentId)) {
-      throw new BadRequestError("Invalid documentId parameter");
-    }
-
-    const query = req.query.query?.trim();
-
-    if (!query) {
-      throw new BadRequestError("Search query is required");
-    }
-
+    const query = req.query.query;
     const k = req.query.k ? parseInt(req.query.k, 10) : 5;
-
-    if (isNaN(k) || k <= 0) {
-      throw new BadRequestError("k must be a positive number");
-    }
-
     const data = await searchInDocumentService({
       documentId,
       query,
