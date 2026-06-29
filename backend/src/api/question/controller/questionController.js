@@ -184,7 +184,10 @@ export const assessAnswerAgainstQuestionController = async (req, res, next) => {
     const { questionHash } = req.params;
     const { answerText } = req.body;
 
-    const question = await getSingleQuestionService({ questionHash });
+    const { question } = await getSingleQuestionService({
+      questionHash,
+      includeAnswer: false,
+    });
 
     const data = await assessAnswerAgainstQuestionService({
       questionTitle: question.title,

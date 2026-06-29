@@ -1,9 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { ServiceUnavailableError } from "../../../utils/errors/index.js";
 // Force the SDK to use the v1beta endpoint pathway
-const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, {
-  apiVersion: "v1beta",
-});
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const GEMINI_TEXT_MODEL =
   process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash-lite";
 function parseJsonObjectFromGeminiText(raw) {
@@ -23,12 +21,12 @@ function parseJsonObjectFromGeminiText(raw) {
   }
 }
 async function fetchGeminiJsonTextResponse(userPrompt) {
-  const model = genai.getGenerativeModel({
+  const response = await ai.models.generateContent({
     model: GEMINI_TEXT_MODEL,
+    contents: userPrompt,
   });
-  const response = await model.generateContent(userPrompt);
 
-  const text = response?.response?.text?.();
+  const text = response.text;
   return typeof text === "string" ? text : "";
 }
 /**
