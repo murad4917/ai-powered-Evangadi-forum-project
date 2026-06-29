@@ -11,6 +11,7 @@ import {
   queryDocumentValidation,
   getDocumentFileValidation,
   documentIdValidation,
+  searchDocumentValidation,
   
 } from "../validation/rag.validation.js";
 
@@ -22,36 +23,11 @@ import {
   getDocumentMetaController,
   getDocumentFileController,
   searchInDocumentController,
-  // getDocumentMetaController,
-  // getDocumentFileController,
+
 } from "../controller/rag.controller.js";
-// import {
-//   documentIdParamValidation,
-//   // documentIdValidation,
-//   // queryDocumentValidation,
-//   getDocumentFileValidation,
-// } from "../validation/rag.validation.js";
+
 
 const router = express.Router();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * @route POST /api/rag/documents
  * @desc Upload and process a PDF document for RAG
@@ -81,6 +57,7 @@ router.get("/documents", authenticateUser, listDocumentsController);
 router.get(
   "/documents/:documentId/search",
   authenticateUser,
+  searchDocumentValidation,
   searchInDocumentController,
 );
 
