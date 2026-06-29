@@ -8,26 +8,23 @@ import { validationErrorHandler } from "../../../middleware/validation-handler.j
 
 
 export const searchDocumentValidation = [
-  // T-23: Validate documentId param
-  param("documentId")
-    .isInt()
-    .withMessage("documentId must be an integer"),
-
-  // T-23: Validate search query
-  query("query")
-    .notEmpty()
-    .withMessage("query is required")
-    .isString()
-    .withMessage("query must be a string"),
-
-  // T-23: Validate k (optional)
-  query("k")
-    .optional()
-    .isInt({ min: 1, max: 50 })
-    .withMessage("k must be a number between 1 and 50"),
-
-  // T-23: Final validation handler
-  validationErrorHandler,
+  // Validate documentId
+  param("documentId")
+    .isInt()
+    .withMessage("documentId must be an integer"),
+  // Validate search query
+  query("query")
+    .trim()
+    .notEmpty()
+    .withMessage("query is required")
+    .isString()
+    .withMessage("query must be a string"),
+  // Validate k
+  query("k")
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage("k must be a number between 1 and 5"),
+  validationErrorHandler,
 ];
 
 export const documentIdParamValidation = [
