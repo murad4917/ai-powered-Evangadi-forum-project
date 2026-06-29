@@ -185,7 +185,7 @@ export async function findSimilarQuestionsByText({
   } else {
     try {
       embeddingResult = await generateQuestionEmbedding(sourceText, {
-        taskType: "RETRIEVAL_QUERY",
+        taskType: "RETRIEVAL_DOCUMENT",   
       });
     } catch (error) {
       console.error("=== GEMINI API ERROR DURING SEARCH ===");
