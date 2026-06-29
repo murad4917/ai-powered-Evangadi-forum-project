@@ -12,9 +12,9 @@ export const createQuestionValidation = [
 
   body("content")
     .notEmpty()
-    .withMessage("Body is required") 
-    .isLength({ min:10})
-    .withMessage("Title must be at least 10 characters")
+    .withMessage("Content is required")
+    .isLength({ min: 10 })
+    .withMessage("Content must be at least 10 characters"),
 
   validationErrorHandler,
 ];
