@@ -524,10 +524,9 @@ export async function searchInDocumentService({
         score: cosineSimilarity(queryEmbedding, embedding),
       };
     })
-    .filter((result) => result !== null);
-
-  rankedResults.sort((a, b) => b.score - a.score);
-  const topResults = rankedResults.slice(0, k);
+  .filter((result) => result !== null && result.score >= 0.75)
+    .sort((a, b) => b.score - a.score);
+  const topResults = rankedResults.slice(0, k);
 
   return {
     query,
