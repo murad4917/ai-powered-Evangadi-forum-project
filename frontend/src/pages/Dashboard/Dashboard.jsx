@@ -142,27 +142,6 @@ export default function Dashboard() {
     ? `Good to see you, ${firstName}.`
     : "Welcome to the forum.";
 
-  // const quickActions = [
-  //   {
-  //     icon: SquarePen,
-  //     title: "New question",
-  //     desc: "Share context, errors, and what you already tried",
-  //     to: "/questions/ask",
-  //   },
-  //   {
-  //     icon: Library,
-  //     title: "Your topics",
-  //     desc: "Filtered list of threads you authored",
-  //     to: "/my-questions",
-  //   },
-  //   {
-  //     icon: BookOpen,
-  //     title: "Knowledge base",
-  //     desc: "Course library, uploads, and retrieval-backed context for threads",
-  //     to: "/rag-documents",
-  //   },
-  // ];
-
   return (
     <div className={styles.dashboard}>
       {/* Upper Information Card Module */}
@@ -334,10 +313,10 @@ export default function Dashboard() {
                   </Link>
                 );
               })}
-</div>
-           )}
-         </div>
-       </section>
-     </div>
-   );
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }
