@@ -12,10 +12,6 @@ const GEMINI_EMBEDDING_MODEL =
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// const RECOMMENDED_THRESHOLD =
-//   Number(process.env.RECOMMENDED_SIMILARITY_THRESHOLD) || 0.75;
-
-// const RECOMMENDED_K = Number(process.env.RECOMMENDED_K) || 5;
 const RECOMMEND_THRESHOLD =
   Number(process.env.RECOMMEND_THRESHOLD) || 0.75;
 
