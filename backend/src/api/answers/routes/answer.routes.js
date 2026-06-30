@@ -6,13 +6,7 @@ import {
   getSingleAnswerController,
   updateAnswerController,
 } from '../controller/answer.controller.js';
-// import {
-//   answerIdValidation,
-//   createAnswerValidation,
-//   getAnswersValidation,
-//   updateAnswerValidation,
-// } from '../validations/answer.validation.js';
-// import { authenticateUser } from '../../../middleware/authentication.js';
+
 import {
   answerIdValidation,
   createAnswerValidation,
