@@ -12,19 +12,6 @@ import {
 
 const generateQuestionHash = () => crypto.randomBytes(8).toString("hex");
 
-export const shouldBlockSimilarQuestion = ({
-  similarQuestions = [],
-  threshold = 0.75,
-}) => {
-  const bestMatch = similarQuestions[0];
-
-  if (!bestMatch || typeof bestMatch.score !== "number") {
-    return false;
-  }
-
-  return bestMatch.score >= threshold;
-};
-
 /**
  * Create a new question with vector embedding
  */
@@ -40,31 +27,6 @@ export const createQuestionService = async (payload) => {
     typeof vectorConfig?.recommendThreshold === "number"
       ? vectorConfig.recommendThreshold
       : 0.75;
-
-  try {
-    const duplicateCheck = await findSimilarQuestionsByText({
-      sourceText: semanticSourceText,
-      threshold: semanticThreshold,
-      k: 1,
-    });
-
-    if (
-      shouldBlockSimilarQuestion({
-        similarQuestions: duplicateCheck?.similarQuestions || [],
-        threshold: semanticThreshold,
-      })
-    ) {
-      throw new BadRequestError(
-        "A similar question already exists. Please review it before posting a new one.",
-      );
-    }
-  } catch (error) {
-    if (error instanceof BadRequestError) {
-      throw error;
-    }
-
-    console.warn("Semantic duplicate check skipped:", error?.message || error);
-  }
 
   const insertQuestionSql = `
         INSERT INTO questions (
@@ -228,63 +190,6 @@ export const getQuestionsService = async (filters) => {
   };
 };
 
-/**
- * Get a single question by questionHash
- * @param {string} questionHash - The question hash identifier
- * @returns {Promise<object>} - The question object with author details
- * @throws {BadRequestError} - If question is not found
- */
-// export const getSingleQuestionService = async (questionHash) => {
-//   const sql = `
-//         SELECT  
-//             q.question_id AS id,
-//             q.question_hash AS questionHash,
-//             q.title,
-//             q.content,
-//             q.created_at AS createdAt,
-//             q.updated_at AS updatedAt,
-//             u.user_id AS userId,
-//             u.first_name AS firstName,
-//             u.last_name AS lastName,
-//             COUNT(DISTINCT a.answer_id) AS answerCount
-//         FROM questions q
-//         JOIN users u ON q.user_id = u.user_id
-//         LEFT JOIN answers a ON q.question_id = a.question_id
-//         WHERE q.question_hash = ?
-//         GROUP BY 
-//             q.question_id,
-//             q.question_hash,
-//             q.title,
-//             q.content,
-//             q.created_at,
-//             q.updated_at,
-//             u.user_id,
-//             u.first_name,
-//             u.last_name
-//     `;
-//   const rows = await safeExecute(sql, [questionHash]);
-
-//   if (rows.length === 0) {
-//     throw new BadRequestError("Question not found");
-//   }
-
-//   const row = rows[0];
-//   return {
-//     id: row.id,
-//     questionHash: row.questionHash,
-//     title: row.title,
-//     content: row.content,
-//     answerCount: row.answerCount,
-//     createdAt: row.createdAt,
-//     updatedAt: row.updatedAt,
-//     author: {
-//       id: row.userId,
-//       firstName: row.firstName,
-//       lastName: row.lastName,
-//     },
-//   };
-// };
-
 export const updateQuestionService = async ({
   questionHash,
   userId,
@@ -309,7 +214,9 @@ export const updateQuestionService = async ({
     LIMIT 1
   `;
 
-  const existingQuestionRows = await safeExecute(questionLookupSql, [questionHash]);
+  const existingQuestionRows = await safeExecute(questionLookupSql, [
+    questionHash,
+  ]);
 
   if (existingQuestionRows.length === 0) {
     throw new NotFoundError("Question not found");
@@ -327,7 +234,12 @@ export const updateQuestionService = async ({
     WHERE question_hash = ? AND user_id = ?
   `;
 
-  await safeExecute(updateSql, [trimmedTitle, trimmedContent, questionHash, userId]);
+  await safeExecute(updateSql, [
+    trimmedTitle,
+    trimmedContent,
+    questionHash,
+    userId,
+  ]);
 
   return {
     questionHash,
@@ -344,7 +256,9 @@ export const deleteQuestionService = async ({ questionHash, userId }) => {
     LIMIT 1
   `;
 
-  const existingQuestionRows = await safeExecute(questionLookupSql, [questionHash]);
+  const existingQuestionRows = await safeExecute(questionLookupSql, [
+    questionHash,
+  ]);
 
   if (existingQuestionRows.length === 0) {
     throw new NotFoundError("Question not found");
@@ -371,7 +285,6 @@ export const getSingleQuestionService = async ({
   includeAnswer = true,
 }) => {
   const normalizedAnswerLimit = 100; // Fixed max 100 records
-
 
   const questionSql = `
         SELECT
